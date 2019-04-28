@@ -25,7 +25,6 @@ class ResultScene: SKScene {
     }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touches:AnyObject in touches{
-            print(self.atPoint(touches.previousLocation(in: self)))
             let location = touches.previousLocation(in: self)
             let touchNode = self.atPoint(location)
             if touchNode == replayLabel {

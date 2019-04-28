@@ -13,6 +13,9 @@ class TitleScene: SKScene {
     lazy var startLabel = SKLabelNode(fontName: "Verdana-bold", text: "START", fontSize: 70, pos: CGPoint(x: width/2, y: height/6))
     var width: CGFloat!
     var height: CGFloat!
+    
+    // MARK: - LifeCycle
+    
     override func didMove(to view: SKView) {
         width = self.view!.frame.width
         height = self.view!.frame.height
@@ -20,9 +23,9 @@ class TitleScene: SKScene {
         self.addChild(titleLabel)
         self.addChild(startLabel)
     }
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touches:AnyObject in touches{
-            print(self.atPoint(touches.previousLocation(in: self)))
             let location = touches.previousLocation(in: self)
             let touchNode = self.atPoint(location)
             if touchNode == startLabel {
