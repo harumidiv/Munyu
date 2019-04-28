@@ -9,9 +9,10 @@
 import SpriteKit
 
 class ResultScene: SKScene {
-    lazy var endLabel = SKLabelNode(fontName: "Chalkduster", text: "GAMEOVER", fontSize: 50, pos: CGPoint(x: width/2, y: height - height/5))
+    lazy var endLabel = SKLabelNode(fontName: "Chalkduster", text: "GAMEOVER", fontSize: 60, pos: CGPoint(x: width/2, y: height - height/6))
     lazy var replayLabel = SKLabelNode(fontName: "Verdana-bold", text: "REPLAY", fontSize: 70, pos: CGPoint(x: width/2, y: height/7))
-    lazy var imoSprite = SKSpriteNode(imageNamed: "imoEnd.png", size: CGSize(width: width/2, height: height/2), pos: CGPoint(x: width/2, y: height/2))
+    lazy var imoSprite = SKSpriteNode(imageNamed: "imoEnd.png", size: CGSize(width: width, height: height/2), pos: CGPoint(x: width/2, y: height/2))
+    lazy var scoreLabel = SKLabelNode(fontName: "Verdana-bold", text: "score: \(score)", fontSize: 40, pos: CGPoint(x: width/2, y: height - height/4))
     
     lazy var width: CGFloat = self.view!.frame.width
     lazy var height: CGFloat = self.view!.frame.height
@@ -36,6 +37,7 @@ class ResultScene: SKScene {
         self.addChild(endLabel)
         self.addChild(replayLabel)
         self.addChild(imoSprite)
+        self.addChild(scoreLabel)
     }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touches:AnyObject in touches{

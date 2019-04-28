@@ -91,59 +91,21 @@ class GameScene: SKScene {
     
     override func update(_ currentTime: TimeInterval) {
         score += 1
-        imoSprite.sprite.position = CGPoint(x:imoSprite.sprite.position.x + CGFloat(self.acceleromateX),
-                                            y:imoSprite.sprite.position.y)
-        if(imoSprite.sprite.position.x < 0){
-            imoSprite.sprite.position.x = width
-        }else if(imoSprite.sprite.position.x > width){
-            imoSprite.sprite.position.x = 0
-        }
         if missCount > 5 {
             changeView()
         }
         presenter.update()
+        //TODO モデルで衝突判定ロジックを行う
+//        let ripPos:[ObjectPosition] = ripSprite.map{ rip in
+//            ObjectPosition(pos: rip.position)
+//        }
+//        let kinokoPos:[ObjectPosition] = kinokoSprite.map{ kinoko in
+//            ObjectPosition(pos: kinoko.position)
+//        }
+//        presenter.itemCollision(collisionRange: Float(imoSprite.sprite.size.width), imo: ObjectPosition(pos: imoSprite.sprite.position), rip: ripPos, kinoko: kinokoPos)
         
-        let ripPos:[ObjectPosition] = ripSprite.map{ rip in
-            ObjectPosition(pos: rip.position)
-        }
-        let kinokoPos:[ObjectPosition] = kinokoSprite.map{ kinoko in
-            ObjectPosition(pos: kinoko.position)
-        }
+        presenter.collision()
         
-        presenter.itemCollision(collisionRange: Float(imoSprite.sprite.size.width), imo: ObjectPosition(pos: imoSprite.sprite.position), rip: ripPos, kinoko: kinokoPos)
-        
-        //collision----------------------------------------------------------------
-        ripSprite.forEach{ rip in
-            let rx = imoSprite.sprite.position.x - rip.position.x
-            let ry = imoSprite.sprite.position.y - rip.position.y
-            let distance = sqrt(rx * rx + ry * ry)
-            
-            if distance < imoSprite.sprite.size.width/2{
-                score += 300
-                rip.position.y = CGFloat.random(in: height...height*2)
-                presenter.playItemsound()
-            }
-        }
-        kinokoSprite.forEach{ kinoko in
-            let rx = imoSprite.sprite.position.x - kinoko.position.x
-            let ry = imoSprite.sprite.position.y - kinoko.position.y
-            let distance = sqrt(rx * rx + ry * ry)
-            if distance < imoSprite.sprite.size.width/2{
-                score += 100
-                kinoko.position.y = CGFloat.random(in: height...height*2)
-                presenter.playItemsound()
-            }
-        }
-        kanSprite.forEach{ kan in
-            let rx = imoSprite.sprite.position.x - kan.position.x
-            let ry = imoSprite.sprite.position.y - kan.position.y
-            let distance = sqrt(rx * rx + ry * ry)
-            if distance < imoSprite.sprite.size.width/2{
-                kan.position.y = CGFloat.random(in: height...height*2)
-                presenter.playDamageSound()
-                missCount += 1
-            }
-        }
     }
     
     // MARK: - PrivateMethod
@@ -183,7 +145,8 @@ class GameScene: SKScene {
 // MARK: - Extension-GamePresenterOutput
 
 extension GameScene: GamePresenterOutput {
-    func fallSprite(){
+    
+    func showFallSprite(){
         wSprite.forEach{ w in
             w.position.y -= fallSpeed
             if w.position.y < -width/4 {
@@ -214,6 +177,49 @@ extension GameScene: GamePresenterOutput {
                 let randX = CGFloat.random(in: 0...width)
                 let randY = CGFloat.random(in: height...height*2)
                 kan.position = CGPoint(x: randX, y: randY)
+            }
+        }
+    }
+    
+    func showPlayerPosition() {
+        imoSprite.sprite.position = CGPoint(x:imoSprite.sprite.position.x + CGFloat(self.acceleromateX),y:imoSprite.sprite.position.y)
+        if(imoSprite.sprite.position.x < 0){
+            imoSprite.sprite.position.x = width
+        }else if(imoSprite.sprite.position.x > width){
+            imoSprite.sprite.position.x = 0
+        }
+    }
+    
+    func showCollisionSprite() {
+        ripSprite.forEach{ rip in
+            let rx = imoSprite.sprite.position.x - rip.position.x
+            let ry = imoSprite.sprite.position.y - rip.position.y
+            let distance = sqrt(rx * rx + ry * ry)
+            
+            if distance < imoSprite.sprite.size.width{
+                score += 300
+                rip.position.y = CGFloat.random(in: height...height*2)
+                presenter.playItemsound()
+            }
+        }
+        kinokoSprite.forEach{ kinoko in
+            let rx = imoSprite.sprite.position.x - kinoko.position.x
+            let ry = imoSprite.sprite.position.y - kinoko.position.y
+            let distance = sqrt(rx * rx + ry * ry)
+            if distance < imoSprite.sprite.size.width{
+                score += 100
+                kinoko.position.y = CGFloat.random(in: height...height*2)
+                presenter.playItemsound()
+            }
+        }
+        kanSprite.forEach{ kan in
+            let rx = imoSprite.sprite.position.x - kan.position.x
+            let ry = imoSprite.sprite.position.y - kan.position.y
+            let distance = sqrt(rx * rx + ry * ry)
+            if distance < imoSprite.sprite.size.width{
+                kan.position.y = CGFloat.random(in: height...height*2)
+                presenter.playDamageSound()
+                missCount += 1
             }
         }
     }
