@@ -17,6 +17,10 @@
 		0D54E6D5227462E800AADEA2 /* TitleScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6D4227462E800AADEA2 /* TitleScene.swift */; };
 		0DFD694A227553BB000DBD93 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6949227553BB000DBD93 /* GameScene.swift */; };
 		0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD694B227553C9000DBD93 /* ResultScene.swift */; };
+		0DFD69502275559C000DBD93 /* monyu.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD694E2275559C000DBD93 /* monyu.mp3 */; };
+		0DFD69512275559C000DBD93 /* kan.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD694F2275559C000DBD93 /* kan.mp3 */; };
+		0DFD6954227555E5000DBD93 /* SKLabelNode+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6953227555E5000DBD93 /* SKLabelNode+Addition.swift */; };
+		0DFD695622755A20000DBD93 /* SKSpriteNode+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD695522755A20000DBD93 /* SKSpriteNode+Addition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +57,10 @@
 		0D54E6D4227462E800AADEA2 /* TitleScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleScene.swift; sourceTree = "<group>"; };
 		0DFD6949227553BB000DBD93 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		0DFD694B227553C9000DBD93 /* ResultScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScene.swift; sourceTree = "<group>"; };
+		0DFD694E2275559C000DBD93 /* monyu.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = monyu.mp3; sourceTree = "<group>"; };
+		0DFD694F2275559C000DBD93 /* kan.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = kan.mp3; sourceTree = "<group>"; };
+		0DFD6953227555E5000DBD93 /* SKLabelNode+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKLabelNode+Addition.swift"; sourceTree = "<group>"; };
+		0DFD695522755A20000DBD93 /* SKSpriteNode+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKSpriteNode+Addition.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,9 +111,11 @@
 		0D54E6A5227462B100AADEA2 /* Munyu */ = {
 			isa = PBXGroup;
 			children = (
+				0DFD694D22755551000DBD93 /* Sound */,
+				0DFD6952227555D2000DBD93 /* Extension */,
+				0D54E6D62275537E00AADEA2 /* Scene */,
 				0D54E6A6227462B100AADEA2 /* AppDelegate.swift */,
 				0D54E6A8227462B100AADEA2 /* ViewController.swift */,
-				0D54E6D62275537E00AADEA2 /* Scene */,
 				0D54E6AD227462B300AADEA2 /* Assets.xcassets */,
 				0D54E6AA227462B100AADEA2 /* Main.storyboard */,
 				0D54E6AF227462B300AADEA2 /* LaunchScreen.storyboard */,
@@ -140,6 +150,24 @@
 				0DFD694B227553C9000DBD93 /* ResultScene.swift */,
 			);
 			path = Scene;
+			sourceTree = "<group>";
+		};
+		0DFD694D22755551000DBD93 /* Sound */ = {
+			isa = PBXGroup;
+			children = (
+				0DFD694F2275559C000DBD93 /* kan.mp3 */,
+				0DFD694E2275559C000DBD93 /* monyu.mp3 */,
+			);
+			path = Sound;
+			sourceTree = "<group>";
+		};
+		0DFD6952227555D2000DBD93 /* Extension */ = {
+			isa = PBXGroup;
+			children = (
+				0DFD6953227555E5000DBD93 /* SKLabelNode+Addition.swift */,
+				0DFD695522755A20000DBD93 /* SKSpriteNode+Addition.swift */,
+			);
+			path = Extension;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -249,6 +277,8 @@
 				0D54E6B1227462B300AADEA2 /* LaunchScreen.storyboard in Resources */,
 				0D54E6AE227462B300AADEA2 /* Assets.xcassets in Resources */,
 				0D54E6AC227462B100AADEA2 /* Main.storyboard in Resources */,
+				0DFD69502275559C000DBD93 /* monyu.mp3 in Resources */,
+				0DFD69512275559C000DBD93 /* kan.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,11 +303,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DFD6954227555E5000DBD93 /* SKLabelNode+Addition.swift in Sources */,
 				0D54E6A9227462B100AADEA2 /* ViewController.swift in Sources */,
 				0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */,
 				0D54E6A7227462B100AADEA2 /* AppDelegate.swift in Sources */,
 				0D54E6D5227462E800AADEA2 /* TitleScene.swift in Sources */,
 				0DFD694A227553BB000DBD93 /* GameScene.swift in Sources */,
+				0DFD695622755A20000DBD93 /* SKSpriteNode+Addition.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
