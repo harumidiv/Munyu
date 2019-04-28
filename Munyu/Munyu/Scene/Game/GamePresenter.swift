@@ -9,9 +9,21 @@
 import Foundation
 
 protocol GamePresenter {
-
+    func update()
+}
+protocol GamePresenterOutput {
+    func fallSprite()
 }
 
 class GamePresenterImpl: GamePresenter {
+    private var model: GameModel
+    private var output: GamePresenterOutput
+    init(model: GameModel, output: GamePresenterOutput) {
+        self.model = model
+        self.output = output
+    }
     
+    func update() {
+        output.fallSprite()
+    }
 }
