@@ -15,6 +15,8 @@
 		0D54E6BC227462B300AADEA2 /* MunyuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6BB227462B300AADEA2 /* MunyuTests.swift */; };
 		0D54E6C7227462B300AADEA2 /* MunyuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6C6227462B300AADEA2 /* MunyuUITests.swift */; };
 		0D54E6D5227462E800AADEA2 /* TitleScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6D4227462E800AADEA2 /* TitleScene.swift */; };
+		0DFD694A227553BB000DBD93 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6949227553BB000DBD93 /* GameScene.swift */; };
+		0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD694B227553C9000DBD93 /* ResultScene.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +51,8 @@
 		0D54E6C6227462B300AADEA2 /* MunyuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MunyuUITests.swift; sourceTree = "<group>"; };
 		0D54E6C8227462B300AADEA2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0D54E6D4227462E800AADEA2 /* TitleScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleScene.swift; sourceTree = "<group>"; };
+		0DFD6949227553BB000DBD93 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		0DFD694B227553C9000DBD93 /* ResultScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScene.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,7 +105,7 @@
 			children = (
 				0D54E6A6227462B100AADEA2 /* AppDelegate.swift */,
 				0D54E6A8227462B100AADEA2 /* ViewController.swift */,
-				0D54E6D4227462E800AADEA2 /* TitleScene.swift */,
+				0D54E6D62275537E00AADEA2 /* Scene */,
 				0D54E6AD227462B300AADEA2 /* Assets.xcassets */,
 				0D54E6AA227462B100AADEA2 /* Main.storyboard */,
 				0D54E6AF227462B300AADEA2 /* LaunchScreen.storyboard */,
@@ -126,6 +130,16 @@
 				0D54E6C8227462B300AADEA2 /* Info.plist */,
 			);
 			path = MunyuUITests;
+			sourceTree = "<group>";
+		};
+		0D54E6D62275537E00AADEA2 /* Scene */ = {
+			isa = PBXGroup;
+			children = (
+				0D54E6D4227462E800AADEA2 /* TitleScene.swift */,
+				0DFD6949227553BB000DBD93 /* GameScene.swift */,
+				0DFD694B227553C9000DBD93 /* ResultScene.swift */,
+			);
+			path = Scene;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -260,8 +274,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				0D54E6A9227462B100AADEA2 /* ViewController.swift in Sources */,
+				0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */,
 				0D54E6A7227462B100AADEA2 /* AppDelegate.swift in Sources */,
 				0D54E6D5227462E800AADEA2 /* TitleScene.swift in Sources */,
+				0DFD694A227553BB000DBD93 /* GameScene.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
