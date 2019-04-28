@@ -12,9 +12,13 @@ import AVFoundation
 protocol GameModel {
     func damageSoundPlay()
     func itemSoundPlay()
+    func ripCollision(collisionRange: Float, imo: ObjectPosition, rip: [ObjectPosition]) -> Bool
+    func kinokoCollirion(collisionRange: Float, imo: ObjectPosition, kinoko: [ObjectPosition]) -> Bool
 }
 
 class GameModelImpl: GameModel {
+   
+    
     private var item: AVAudioPlayer!
     private var damage: AVAudioPlayer!
     
@@ -34,11 +38,42 @@ class GameModelImpl: GameModel {
         item?.prepareToPlay()
         
     }
+    func ripCollision(collisionRange: Float,imo: ObjectPosition, rip: [ObjectPosition]) -> Bool {
+        return false
+    }
+    
+    func kinokoCollirion(collisionRange: Float, imo: ObjectPosition, kinoko: [ObjectPosition]) -> Bool {
+        var retVal = false
+        kinoko.forEach{ kPos in
+            let rx = imo.x - kPos.x
+            let ry = imo.y - kPos.y
+            let distance = sqrt(rx * rx + ry * ry)
+            
+            if distance < collisionRange {
+                if item!.isPlaying == true
+                {
+                    item!.currentTime = 0;
+                }
+                itemSoundPlay()
+                retVal = true
+            }
+        }
+        return retVal
+    }
+    
     func itemSoundPlay() {
+        if item!.isPlaying == true
+        {
+            item!.currentTime = 0;
+        }
         item.play()
     }
     
     func damageSoundPlay() {
+        if damage!.isPlaying == true
+        {
+            damage!.currentTime = 0;
+        }
         damage.play()
     }
 }

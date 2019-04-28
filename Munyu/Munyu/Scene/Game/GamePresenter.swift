@@ -10,6 +10,10 @@ import Foundation
 
 protocol GamePresenter {
     func update()
+    func itemCollision(collisionRange: Float,imo: ObjectPosition, rip: [ObjectPosition], kinoko: [ObjectPosition])
+    func damageCollision(imo: ObjectPosition, kan: [ObjectPosition])
+    func playItemsound()
+    func playDamageSound()
 }
 protocol GamePresenterOutput {
     func fallSprite()
@@ -21,6 +25,20 @@ class GamePresenterImpl: GamePresenter {
     init(model: GameModel, output: GamePresenterOutput) {
         self.model = model
         self.output = output
+    }
+    
+    func itemCollision(collisionRange: Float, imo: ObjectPosition, rip: [ObjectPosition], kinoko: [ObjectPosition]) {
+        model.ripCollision(collisionRange: collisionRange, imo: imo, rip: rip)
+    }
+    
+    func damageCollision(imo: ObjectPosition, kan: [ObjectPosition]) {
+        
+    }
+    func playItemsound(){
+        model.itemSoundPlay()
+    }
+    func playDamageSound(){
+        model.damageSoundPlay()
     }
     
     func update() {

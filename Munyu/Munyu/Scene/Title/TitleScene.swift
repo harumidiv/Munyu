@@ -9,16 +9,16 @@
 import SpriteKit
 
 class TitleScene: SKScene {
+    
+    // MARK: - Property
     lazy var titleLabel = SKLabelNode(fontName: "Verdana-bold", text: "Goむにゅ", fontSize: 70, pos: CGPoint(x: width/2, y: height - height/3))
     lazy var startLabel = SKLabelNode(fontName: "Verdana-bold", text: "START", fontSize: 70, pos: CGPoint(x: width/2, y: height/6))
-    var width: CGFloat!
-    var height: CGFloat!
+    lazy var width: CGFloat = self.view!.frame.width
+    lazy var height: CGFloat = self.view!.frame.height
     
     // MARK: - LifeCycle
     
     override func didMove(to view: SKView) {
-        width = self.view!.frame.width
-        height = self.view!.frame.height
         self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
         self.addChild(titleLabel)
         self.addChild(startLabel)

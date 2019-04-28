@@ -12,12 +12,26 @@ class ResultScene: SKScene {
     lazy var endLabel = SKLabelNode(fontName: "Chalkduster", text: "GAMEOVER", fontSize: 50, pos: CGPoint(x: width/2, y: height - height/5))
     lazy var replayLabel = SKLabelNode(fontName: "Verdana-bold", text: "REPLAY", fontSize: 70, pos: CGPoint(x: width/2, y: height/7))
     lazy var imoSprite = SKSpriteNode(imageNamed: "imoEnd.png", size: CGSize(width: width/2, height: height/2), pos: CGPoint(x: width/2, y: height/2))
-    var width: CGFloat!
-    var height: CGFloat!
+    
+    lazy var width: CGFloat = self.view!.frame.width
+    lazy var height: CGFloat = self.view!.frame.height
+    let score: Int
+    
+    
+    init(size: CGSize, score: Int) {
+        self.score = score
+        super.init(size: size)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - LifeCycle
+    
     override func didMove(to view: SKView) {
         self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
-        width = self.view!.frame.width
-        height = self.view!.frame.height
+
         
         self.addChild(endLabel)
         self.addChild(replayLabel)
