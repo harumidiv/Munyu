@@ -59,9 +59,7 @@ class GameScene: SKScene {
     let fallSpeed: CGFloat = 7
 
     var missCount: Int = 0
-    
     var score = 0
-    
     
     // MARK: - LifeCycle
     
@@ -75,9 +73,8 @@ class GameScene: SKScene {
         imoSprite.runAnimate()
         
         motionManager = CMMotionManager()
-        updateAcceleData()
+        presenter.getAcceldata(accelX: { self.acceleromateX = CGFloat($0)})
     }
-    
     
     override func update(_ currentTime: TimeInterval) {
         score += 1
@@ -100,17 +97,6 @@ class GameScene: SKScene {
     
     // MARK: - PrivateMethod
     
-    private func updateAcceleData(){
-        if motionManager.isAccelerometerAvailable {
-            motionManager.accelerometerUpdateInterval = 0.1
-            
-            motionManager.startAccelerometerUpdates(
-                to: OperationQueue.current!,
-                withHandler: {(accelData: CMAccelerometerData?, errorOC: Error?) in
-                    self.acceleromateX = CGFloat(accelData!.acceleration.x * 20)
-            })
-        }
-    }
     private func changeView() {
         let scene = ResultScene(size: self.size, score: score)
         self.view!.presentScene(scene)
@@ -119,11 +105,10 @@ class GameScene: SKScene {
         let monyuSprite = SKSpriteNode(imageNamed: "monyu")
         monyuSprite.position = imoSprite.sprite.position
         self.addChild(monyuSprite)
-        let action1 = SKAction.scale(to: 2.0, duration: 0.4)
-        let action2 = SKAction.moveBy(x: 0, y: 100, duration: 0.4)
-        let actionG = SKAction.group([action1, action2])
-        let action3 = SKAction.removeFromParent()
-        let actionS = SKAction.sequence([actionG, action3])
+        let scale = SKAction.scale(to: 2.0, duration: 0.4)
+        let move = SKAction.moveBy(x: 0, y: 100, duration: 0.4)
+        let remove = SKAction.removeFromParent()
+        let actionS = SKAction.sequence([SKAction.group([scale, move]), remove])
         monyuSprite.run(actionS)
     }
 }
@@ -136,33 +121,25 @@ extension GameScene: GamePresenterOutput {
         wSprite.forEach{ w in
             w.position.y -= fallSpeed
             if w.position.y < -width/4 {
-                let randX = CGFloat.random(in: 0...width)
-                let randY = CGFloat.random(in: height...height*2)
-                w.position = CGPoint(x: randX, y: randY)
+                w.position = randomPos
             }
         }
         ripSprite.forEach{ rip in
             rip.position.y -= fallSpeed
             if rip.position.y < -width/4 {
-                let randX = CGFloat.random(in: 0...width)
-                let randY = CGFloat.random(in: height...height*2)
-                rip.position = CGPoint(x: randX, y: randY)
+                rip.position = randomPos
             }
         }
         kinokoSprite.forEach{ kinoko in
             kinoko.position.y -= fallSpeed
             if kinoko.position.y < -width/4 {
-                let randX = CGFloat.random(in: 0...width)
-                let randY = CGFloat.random(in: height...height*2)
-                kinoko.position = CGPoint(x: randX, y: randY)
+                kinoko.position = randomPos
             }
         }
         kanSprite.forEach{ kan in
             kan.position.y -= fallSpeed
             if kan.position.y < -width/4 {
-                let randX = CGFloat.random(in: 0...width)
-                let randY = CGFloat.random(in: height...height*2)
-                kan.position = CGPoint(x: randX, y: randY)
+                kan.position = randomPos
             }
         }
     }

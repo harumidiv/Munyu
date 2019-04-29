@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import CoreMotion
 
 protocol GamePresenter {
     func update()
@@ -15,6 +16,8 @@ protocol GamePresenter {
     func damageCollision(imo: ObjectPosition, kan: [ObjectPosition])
     func playItemsound()
     func playDamageSound()
+    
+    func getAcceldata(accelX:@escaping(_ result: Float)->Void)
 }
 protocol GamePresenterOutput {
     func showFallSprite()
@@ -23,11 +26,17 @@ protocol GamePresenterOutput {
 }
 
 class GamePresenterImpl: GamePresenter {
+    
+    
     private var model: GameModel
     private var output: GamePresenterOutput
     init(model: GameModel, output: GamePresenterOutput) {
         self.model = model
         self.output = output
+    }
+    
+    func getAcceldata(accelX:@escaping (_ result: Float)->Void) {
+        model.getAcceldata(accelX: {accelX($0)})
     }
     
     func itemCollision(collisionRange: Float, imo: ObjectPosition, rip: [ObjectPosition], kinoko: [ObjectPosition]) {

@@ -25,4 +25,11 @@ extension SKScene {
             return frame.height
         }
     }
+    var randomPos: CGPoint {
+        get {
+            let x = CGFloat.random(in: 0...width)
+            let y = CGFloat.random(in: height...height*2)
+            return CGPoint(x: x, y: y)
+        }
+    }
 }
