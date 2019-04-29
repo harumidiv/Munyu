@@ -14,14 +14,14 @@ class ResultScene: SKScene {
     lazy var imoSprite = SKSpriteNode(imageNamed: "imoEnd.png", size: CGSize(width: width, height: height/2), pos: CGPoint(x: width/2, y: height/2))
     lazy var scoreLabel = SKLabelNode(fontName: "Verdana-bold", text: "score: \(score)", fontSize: 40, pos: CGPoint(x: width/2, y: height - height/4))
     
-    lazy var width: CGFloat = self.view!.frame.width
-    lazy var height: CGFloat = self.view!.frame.height
     let score: Int
     
+    // MARK: - Initializer
     
     init(size: CGSize, score: Int) {
         self.score = score
         super.init(size: size)
+        self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -31,10 +31,11 @@ class ResultScene: SKScene {
     // MARK: - LifeCycle
     
     override func didMove(to view: SKView) {
-        self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
-
         self.addChild(endLabel, replayLabel, imoSprite, scoreLabel)
     }
+    
+    // MARK: - Event
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touches:AnyObject in touches{
             let location = touches.previousLocation(in: self)

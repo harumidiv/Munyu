@@ -15,4 +15,14 @@ extension SKScene {
     func addChild(_ nodes: [SKNode]...) {
         nodes.forEach({$0.forEach(addChild(_:))})
     }
+    var width: CGFloat {
+        get {
+            return frame.width
+        }
+    }
+    var height: CGFloat {
+        get {
+            return frame.height
+        }
+    }
 }

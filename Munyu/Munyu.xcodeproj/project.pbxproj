@@ -26,6 +26,7 @@
 		0DFD695F22757858000DBD93 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD695E22757858000DBD93 /* Player.swift */; };
 		0DFD69642275932D000DBD93 /* ObjectPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD69632275932D000DBD93 /* ObjectPosition.swift */; };
 		0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD696522769236000DBD93 /* SKScene+Addition.swift */; };
+		0DFD6968227694E8000DBD93 /* CGPoint+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +72,7 @@
 		0DFD695E22757858000DBD93 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		0DFD69632275932D000DBD93 /* ObjectPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectPosition.swift; sourceTree = "<group>"; };
 		0DFD696522769236000DBD93 /* SKScene+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKScene+Addition.swift"; sourceTree = "<group>"; };
+		0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPoint+Addition.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				0DFD6953227555E5000DBD93 /* SKLabelNode+Addition.swift */,
+				0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */,
 				0DFD695522755A20000DBD93 /* SKSpriteNode+Addition.swift */,
 				0DFD696522769236000DBD93 /* SKScene+Addition.swift */,
 			);
@@ -353,6 +356,7 @@
 				0DFD6954227555E5000DBD93 /* SKLabelNode+Addition.swift in Sources */,
 				0DFD69642275932D000DBD93 /* ObjectPosition.swift in Sources */,
 				0D54E6A9227462B100AADEA2 /* ViewController.swift in Sources */,
+				0DFD6968227694E8000DBD93 /* CGPoint+Addition.swift in Sources */,
 				0DFD695D22757636000DBD93 /* GameModel.swift in Sources */,
 				0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */,
 				0D54E6A7227462B100AADEA2 /* AppDelegate.swift in Sources */,

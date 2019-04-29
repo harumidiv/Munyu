@@ -23,9 +23,7 @@ class GameScene: SKScene {
     lazy var wSprite: [SKSpriteNode] = {
         var sprites: [SKSpriteNode] = []
         for i in 0...6 {
-            let randX = CGFloat.random(in: 0...width)
-            let randY = CGFloat.random(in: height...height*2)
-            sprites.append(SKSpriteNode(imageNamed:  "w-3", size: CGSize(width: width/3, height: width/3.5), pos: CGPoint(x: randX, y: randY)))
+            sprites.append(SKSpriteNode(imageNamed:  "w-3", size: CGSize(width: width/3, height: width/3.5), pos: CGPoint(randX: width, randY: height)))
             sprites[i].zPosition = 0.5
         }
         return sprites
@@ -33,18 +31,14 @@ class GameScene: SKScene {
     lazy var ripSprite: [SKSpriteNode] = {
         var sprites: [SKSpriteNode] = []
         for i in 0...6 {
-            let randX = CGFloat.random(in: 0...width)
-            let randY = CGFloat.random(in: height...height*2)
-            sprites.append(SKSpriteNode(imageNamed:  "rip", size: CGSize(width: width/10, height: width/8), pos: CGPoint(x: randX, y: randY)))
+            sprites.append(SKSpriteNode(imageNamed:  "rip", size: CGSize(width: width/10, height: width/8), pos: CGPoint(randX: width, randY: height)))
         }
         return sprites
     }()
     lazy var kinokoSprite: [SKSpriteNode] = {
         var sprites: [SKSpriteNode] = []
         for i in 0...6 {
-            let randX = CGFloat.random(in: 0...width)
-            let randY = CGFloat.random(in: height...height*2)
-            sprites.append(SKSpriteNode(imageNamed:  "kinoko", size: CGSize(width: width/8, height: width/8), pos: CGPoint(x: randX, y: randY)))
+            sprites.append(SKSpriteNode(imageNamed:  "kinoko", size: CGSize(width: width/8, height: width/8), pos: CGPoint(randX: width, randY: height)))
         }
         return sprites
     }()
@@ -52,9 +46,7 @@ class GameScene: SKScene {
     lazy var kanSprite: [SKSpriteNode] = {
         var sprites: [SKSpriteNode] = []
         for i in 0...6 {
-            let randX = CGFloat.random(in: 0...width)
-            let randY = CGFloat.random(in: height...height*2)
-            sprites.append(SKSpriteNode(imageNamed:  "kan", size: CGSize(width: width/8, height: width/8), pos: CGPoint(x: randX, y: randY)))
+            sprites.append(SKSpriteNode(imageNamed:  "kan", size: CGSize(width: width/8, height: width/8), pos: CGPoint(randX: width, randY: height)))
         }
         return sprites
     }()
@@ -65,9 +57,7 @@ class GameScene: SKScene {
     var motionManager:CMMotionManager!
     lazy var acceleromateX: CGFloat = width/2
     let fallSpeed: CGFloat = 7
-    
-    lazy var width: CGFloat = self.view!.frame.width
-    lazy var height: CGFloat = self.view!.frame.height
+
     var missCount: Int = 0
     
     var score = 0
@@ -77,14 +67,14 @@ class GameScene: SKScene {
     
     override func didMove(to view: SKView) {
         super.didMove(to: view)
-        
         self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
-        motionManager = CMMotionManager()
         
+        
+        self.addChild(wSprite, ripSprite, kinokoSprite, kanSprite)
         self.addChild(imoSprite.sprite)
         imoSprite.runAnimate()
-        self.addChild(wSprite, ripSprite, kinokoSprite, kanSprite)
         
+        motionManager = CMMotionManager()
         updateAcceleData()
     }
     
