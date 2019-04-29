@@ -83,8 +83,8 @@ class GameScene: SKScene {
         
         self.addChild(imoSprite.sprite)
         imoSprite.runAnimate()
+        self.addChild(wSprite, ripSprite, kinokoSprite, kanSprite)
         
-        addItemSprite()
         updateAcceleData()
     }
     
@@ -109,21 +109,6 @@ class GameScene: SKScene {
     }
     
     // MARK: - PrivateMethod
-    
-    private func addItemSprite(){
-        wSprite.forEach{ w in
-            self.addChild(w)
-        }
-        ripSprite.forEach{ rip in
-            self.addChild(rip)
-        }
-        kinokoSprite.forEach{ kinoko in
-            self.addChild(kinoko)
-        }
-        kanSprite.forEach{ kan in
-            self.addChild(kan)
-        }
-    }
     
     private func updateAcceleData(){
         if motionManager.isAccelerometerAvailable {

@@ -33,11 +33,7 @@ class ResultScene: SKScene {
     override func didMove(to view: SKView) {
         self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
 
-        
-        self.addChild(endLabel)
-        self.addChild(replayLabel)
-        self.addChild(imoSprite)
-        self.addChild(scoreLabel)
+        self.addChild(endLabel, replayLabel, imoSprite, scoreLabel)
     }
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touches:AnyObject in touches{

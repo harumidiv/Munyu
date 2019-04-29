@@ -20,8 +20,8 @@ class TitleScene: SKScene {
     
     override func didMove(to view: SKView) {
         self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
-        self.addChild(titleLabel)
-        self.addChild(startLabel)
+        
+        self.addChild(titleLabel, startLabel)
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
