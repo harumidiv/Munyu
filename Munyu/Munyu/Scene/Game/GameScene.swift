@@ -115,6 +115,17 @@ class GameScene: SKScene {
         let scene = ResultScene(size: self.size, score: score)
         self.view!.presentScene(scene)
     }
+    private func monyu(){
+        let monyuSprite = SKSpriteNode(imageNamed: "monyu")
+        monyuSprite.position = imoSprite.sprite.position
+        self.addChild(monyuSprite)
+        let action1 = SKAction.scale(to: 2.0, duration: 0.4)
+        let action2 = SKAction.moveBy(x: 0, y: 100, duration: 0.4)
+        let actionG = SKAction.group([action1, action2])
+        let action3 = SKAction.removeFromParent()
+        let actionS = SKAction.sequence([actionG, action3])
+        monyuSprite.run(actionS)
+    }
 }
 
 // MARK: - Extension-GamePresenterOutput
@@ -172,6 +183,7 @@ extension GameScene: GamePresenterOutput {
             let distance = sqrt(rx * rx + ry * ry)
             
             if distance < imoSprite.sprite.size.width{
+                monyu()
                 score += 300
                 rip.position.y = CGFloat.random(in: height...height*2)
                 presenter.playItemsound()
@@ -182,6 +194,7 @@ extension GameScene: GamePresenterOutput {
             let ry = imoSprite.sprite.position.y - kinoko.position.y
             let distance = sqrt(rx * rx + ry * ry)
             if distance < imoSprite.sprite.size.width{
+                monyu()
                 score += 100
                 kinoko.position.y = CGFloat.random(in: height...height*2)
                 presenter.playItemsound()
@@ -192,6 +205,10 @@ extension GameScene: GamePresenterOutput {
             let ry = imoSprite.sprite.position.y - kan.position.y
             let distance = sqrt(rx * rx + ry * ry)
             if distance < imoSprite.sprite.size.width{
+                let spk = SKEmitterNode(fileNamed: "Spark")!
+                spk.numParticlesToEmit = 30
+                spk.position = imoSprite.sprite.position
+                self.addChild(spk)
                 kan.position.y = CGFloat.random(in: height...height*2)
                 presenter.playDamageSound()
                 missCount += 1

@@ -27,6 +27,7 @@
 		0DFD69642275932D000DBD93 /* ObjectPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD69632275932D000DBD93 /* ObjectPosition.swift */; };
 		0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD696522769236000DBD93 /* SKScene+Addition.swift */; };
 		0DFD6968227694E8000DBD93 /* CGPoint+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */; };
+		0DFD696E227719FD000DBD93 /* Spark.sks in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD696D227719FD000DBD93 /* Spark.sks */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -73,6 +74,7 @@
 		0DFD69632275932D000DBD93 /* ObjectPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectPosition.swift; sourceTree = "<group>"; };
 		0DFD696522769236000DBD93 /* SKScene+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKScene+Addition.swift"; sourceTree = "<group>"; };
 		0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPoint+Addition.swift"; sourceTree = "<group>"; };
+		0DFD696D227719FD000DBD93 /* Spark.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Spark.sks; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +131,7 @@
 				0D54E6D62275537E00AADEA2 /* Scene */,
 				0D54E6A6227462B100AADEA2 /* AppDelegate.swift */,
 				0D54E6A8227462B100AADEA2 /* ViewController.swift */,
+				0DFD696D227719FD000DBD93 /* Spark.sks */,
 				0D54E6AD227462B300AADEA2 /* Assets.xcassets */,
 				0D54E6AA227462B100AADEA2 /* Main.storyboard */,
 				0D54E6AF227462B300AADEA2 /* LaunchScreen.storyboard */,
@@ -329,6 +332,7 @@
 				0D54E6AC227462B100AADEA2 /* Main.storyboard in Resources */,
 				0DFD69502275559C000DBD93 /* monyu.mp3 in Resources */,
 				0DFD69512275559C000DBD93 /* kan.mp3 in Resources */,
+				0DFD696E227719FD000DBD93 /* Spark.sks in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
