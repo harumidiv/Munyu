@@ -12,14 +12,14 @@ enum Difficulty {
     case easy
     case normal
     case hard
-    func difficulty() -> (rip: Int, kinoko: Int, kan: Int) {
+    func count() -> (rip: Int, kinoko: Int, kan: Int) {
         switch self {
         case .easy:
-            return (rip: 6, kinoko: 10, kan: 6)
-        case .normal:
             return (rip: 6, kinoko: 10, kan: 10)
+        case .normal:
+            return (rip: 6, kinoko: 20, kan: 15)
         case .hard:
-            return (rip: 3, kinoko: 115, kan: 15)
+            return (rip: 3, kinoko: 25, kan: 20)
         }
     }
 }

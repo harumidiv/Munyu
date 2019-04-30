@@ -7,13 +7,12 @@
 //
 
 import SpriteKit
-import CoreMotion
 
 class GameScene: SKScene {
     
     // MARK: - Property
     
-    lazy var imoSprite: Player = {
+    lazy var imo: Player = {
         let sprite = SKSpriteNode(imageNamed: "imo1", size: CGSize(width: width/10, height: width/10), pos: CGPoint(x: width/2, y: height/15))
         let action = SKAction.animate(
             with: [SKTexture(imageNamed: "imo1.png"),SKTexture(imageNamed: "imo2.png")],
@@ -30,14 +29,14 @@ class GameScene: SKScene {
     }()
     lazy var ripSprite: [SKSpriteNode] = {
         var sprites: [SKSpriteNode] = []
-        for i in 0...6 {
+        for i in 0...difficulty.count().rip {
             sprites.append(SKSpriteNode(imageNamed:  "rip", size: CGSize(width: width/10, height: width/8), pos: CGPoint(randX: width, randY: height)))
         }
         return sprites
     }()
     lazy var kinokoSprite: [SKSpriteNode] = {
         var sprites: [SKSpriteNode] = []
-        for i in 0...6 {
+        for i in 0...difficulty.count().kinoko {
             sprites.append(SKSpriteNode(imageNamed:  "kinoko", size: CGSize(width: width/8, height: width/8), pos: CGPoint(randX: width, randY: height)))
         }
         return sprites
@@ -45,7 +44,7 @@ class GameScene: SKScene {
     
     lazy var kanSprite: [SKSpriteNode] = {
         var sprites: [SKSpriteNode] = []
-        for i in 0...6 {
+        for i in 0...difficulty.count().kan {
             sprites.append(SKSpriteNode(imageNamed:  "kan", size: CGSize(width: width/8, height: width/8), pos: CGPoint(randX: width, randY: height)))
         }
         return sprites
@@ -53,13 +52,22 @@ class GameScene: SKScene {
     lazy var presenter: GamePresenter! = {
         return GamePresenterImpl(model: GameModelImpl(), output: self)
     }()
-    
-    var motionManager:CMMotionManager!
+
     lazy var acceleromateX: CGFloat = width/2
     let fallSpeed: CGFloat = 7
 
     var missCount: Int = 0
     var score = 0
+    let difficulty: Difficulty
+    
+    init(size: CGSize, difficulty: Difficulty) {
+        self.difficulty = difficulty
+        super.init(size: size)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     // MARK: - LifeCycle
     
@@ -67,12 +75,10 @@ class GameScene: SKScene {
         super.didMove(to: view)
         self.backgroundColor = SKColor(red: 0.5, green: 0.84, blue: 0.51, alpha: 1)
         
-        
         self.addChild(wSprite, ripSprite, kinokoSprite, kanSprite)
-        self.addChild(imoSprite.sprite)
-        imoSprite.runAnimate()
+        self.addChild(imo.sprite)
+        imo.runAnimate()
         
-        motionManager = CMMotionManager()
         presenter.getAcceldata(accelX: { self.acceleromateX = CGFloat($0)})
     }
     
@@ -89,7 +95,7 @@ class GameScene: SKScene {
 //        let kinokoPos:[ObjectPosition] = kinokoSprite.map{ kinoko in
 //            ObjectPosition(pos: kinoko.position)
 //        }
-//        presenter.itemCollision(collisionRange: Float(imoSprite.sprite.size.width), imo: ObjectPosition(pos: imoSprite.sprite.position), rip: ripPos, kinoko: kinokoPos)
+//        presenter.itemCollision(collisionRange: Float(imo.sprite.size.width), imo: ObjectPosition(pos: imo.sprite.position), rip: ripPos, kinoko: kinokoPos)
         
         presenter.collision()
         
@@ -103,7 +109,7 @@ class GameScene: SKScene {
     }
     private func monyu(){
         let monyuSprite = SKSpriteNode(imageNamed: "monyu")
-        monyuSprite.position = imoSprite.sprite.position
+        monyuSprite.position = imo.sprite.position
         self.addChild(monyuSprite)
         let scale = SKAction.scale(to: 2.0, duration: 0.4)
         let move = SKAction.moveBy(x: 0, y: 100, duration: 0.4)
@@ -145,21 +151,21 @@ extension GameScene: GamePresenterOutput {
     }
     
     func showPlayerPosition() {
-        imoSprite.sprite.position = CGPoint(x:imoSprite.sprite.position.x + CGFloat(self.acceleromateX),y:imoSprite.sprite.position.y)
-        if(imoSprite.sprite.position.x < 0){
-            imoSprite.sprite.position.x = width
-        }else if(imoSprite.sprite.position.x > width){
-            imoSprite.sprite.position.x = 0
+        imo.sprite.position = CGPoint(x:imo.sprite.position.x + CGFloat(self.acceleromateX),y:imo.sprite.position.y)
+        if(imo.sprite.position.x < 0){
+            imo.sprite.position.x = width
+        }else if(imo.sprite.position.x > width){
+            imo.sprite.position.x = 0
         }
     }
     
     func showCollisionSprite() {
         ripSprite.forEach{ rip in
-            let rx = imoSprite.sprite.position.x - rip.position.x
-            let ry = imoSprite.sprite.position.y - rip.position.y
+            let rx = imo.sprite.position.x - rip.position.x
+            let ry = imo.sprite.position.y - rip.position.y
             let distance = sqrt(rx * rx + ry * ry)
             
-            if distance < imoSprite.sprite.size.width{
+            if distance < imo.sprite.size.width{
                 monyu()
                 score += 300
                 rip.position.y = CGFloat.random(in: height...height*2)
@@ -167,10 +173,10 @@ extension GameScene: GamePresenterOutput {
             }
         }
         kinokoSprite.forEach{ kinoko in
-            let rx = imoSprite.sprite.position.x - kinoko.position.x
-            let ry = imoSprite.sprite.position.y - kinoko.position.y
+            let rx = imo.sprite.position.x - kinoko.position.x
+            let ry = imo.sprite.position.y - kinoko.position.y
             let distance = sqrt(rx * rx + ry * ry)
-            if distance < imoSprite.sprite.size.width{
+            if distance < imo.sprite.size.width{
                 monyu()
                 score += 100
                 kinoko.position.y = CGFloat.random(in: height...height*2)
@@ -178,13 +184,13 @@ extension GameScene: GamePresenterOutput {
             }
         }
         kanSprite.forEach{ kan in
-            let rx = imoSprite.sprite.position.x - kan.position.x
-            let ry = imoSprite.sprite.position.y - kan.position.y
+            let rx = imo.sprite.position.x - kan.position.x
+            let ry = imo.sprite.position.y - kan.position.y
             let distance = sqrt(rx * rx + ry * ry)
-            if distance < imoSprite.sprite.size.width{
+            if distance < imo.sprite.size.width{
                 let spk = SKEmitterNode(fileNamed: "Spark")!
                 spk.numParticlesToEmit = 30
-                spk.position = imoSprite.sprite.position
+                spk.position = imo.sprite.position
                 self.addChild(spk)
                 kan.position.y = CGFloat.random(in: height...height*2)
                 presenter.playDamageSound()
