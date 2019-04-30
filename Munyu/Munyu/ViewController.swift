@@ -10,8 +10,6 @@ import UIKit
 import SpriteKit
 
 class ViewController: UIViewController {
-    let titleLabel = SKLabelNode(fontNamed: "Verdana-bold")
-    let startLabel = SKLabelNode(fontNamed: "Verdana-bold")
     
     override func loadView() {
         let skView = SKView(frame: UIScreen.main.bounds)
