@@ -11,23 +11,17 @@ import CoreMotion
 
 protocol GamePresenter {
     func update()
-    func collision()
-    func itemCollision(collisionRange: Float,imo: ObjectPosition, rip: [ObjectPosition], kinoko: [ObjectPosition])
-    func damageCollision(imo: ObjectPosition, kan: [ObjectPosition])
     func playItemsound()
     func playDamageSound()
-    
     func getAcceldata(accelX:@escaping(_ result: Float)->Void)
+    func isCollision(item1: ObjectPosition, item2:ObjectPosition, range: Float) -> Bool
 }
 protocol GamePresenterOutput {
     func showFallSprite()
     func showPlayerPosition()
-    func showCollisionSprite()
 }
 
 class GamePresenterImpl: GamePresenter {
-    
-    
     private var model: GameModel
     private var output: GamePresenterOutput
     init(model: GameModel, output: GamePresenterOutput) {
@@ -35,17 +29,14 @@ class GamePresenterImpl: GamePresenter {
         self.output = output
     }
     
+    func isCollision(item1: ObjectPosition, item2: ObjectPosition, range: Float) -> Bool {
+        return model.isCollision(item1: item1, item2: item2, range: range)
+    }
+    
     func getAcceldata(accelX:@escaping (_ result: Float)->Void) {
         model.getAcceldata(accelX: {accelX($0)})
     }
     
-    func itemCollision(collisionRange: Float, imo: ObjectPosition, rip: [ObjectPosition], kinoko: [ObjectPosition]) {
-        model.ripCollision(collisionRange: collisionRange, imo: imo, rip: rip)
-    }
-    
-    func damageCollision(imo: ObjectPosition, kan: [ObjectPosition]) {
-        
-    }
     func playItemsound(){
         model.itemSoundPlay()
     }
@@ -57,8 +48,4 @@ class GamePresenterImpl: GamePresenter {
         output.showFallSprite()
         output.showPlayerPosition()
     }
-    func collision() {
-        output.showCollisionSprite()
-    }
-    
 }

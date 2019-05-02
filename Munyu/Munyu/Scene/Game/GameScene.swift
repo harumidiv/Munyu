@@ -10,7 +10,7 @@ import SpriteKit
 
 class GameScene: SKScene {
     
-    // MARK: - Property
+    // MARK: NodeInitialize
     
     lazy var imo: Player = {
         let sprite = SKSpriteNode(imageNamed: "imo1", size: CGSize(width: width/10, height: width/10), pos: CGPoint(x: width/2, y: height/15))
@@ -52,6 +52,8 @@ class GameScene: SKScene {
     lazy var presenter: GamePresenter! = {
         return GamePresenterImpl(model: GameModelImpl(), output: self)
     }()
+    
+    // MARK: - Property
 
     lazy var acceleromateX: CGFloat = width/2
     let fallSpeed: CGFloat = 7
@@ -88,17 +90,31 @@ class GameScene: SKScene {
             changeView()
         }
         presenter.update()
-        //TODO モデルで衝突判定ロジックを行う
-//        let ripPos:[ObjectPosition] = ripSprite.map{ rip in
-//            ObjectPosition(pos: rip.position)
-//        }
-//        let kinokoPos:[ObjectPosition] = kinokoSprite.map{ kinoko in
-//            ObjectPosition(pos: kinoko.position)
-//        }
-//        presenter.itemCollision(collisionRange: Float(imo.sprite.size.width), imo: ObjectPosition(pos: imo.sprite.position), rip: ripPos, kinoko: kinokoPos)
         
-        presenter.collision()
-        
+        ripSprite.forEach{ rip in
+            if presenter.isCollision(item1: ObjectPosition(pos: imo.sprite.position), item2: ObjectPosition(pos: rip.position), range: Float(imo.sprite.size.width)) {
+                monyu()
+                score += 300
+                rip.position.y = CGFloat.random(in: height...height*2)
+                presenter.playItemsound()
+            }
+        }
+        kinokoSprite.forEach{ kinoko in
+            if presenter.isCollision(item1: ObjectPosition(pos: imo.sprite.position), item2: ObjectPosition(pos: kinoko.position), range: Float(imo.sprite.size.width)) {
+                monyu()
+                score += 100
+                kinoko.position.y = CGFloat.random(in: height...height*2)
+                presenter.playItemsound()
+            }
+        }
+        kanSprite.forEach{ kan in
+            if presenter.isCollision(item1: ObjectPosition(pos: imo.sprite.position), item2: ObjectPosition(pos: kan.position), range: Float(imo.sprite.size.width)) {
+                addSpark()
+                kan.position.y = CGFloat.random(in: height...height*2)
+                presenter.playDamageSound()
+                missCount += 1
+            }
+        }
     }
     
     // MARK: - PrivateMethod
@@ -117,34 +133,40 @@ class GameScene: SKScene {
         let actionS = SKAction.sequence([SKAction.group([scale, move]), remove])
         monyuSprite.run(actionS)
     }
+    private func addSpark(){
+        let spk = SKEmitterNode(fileNamed: "Spark")!
+        spk.numParticlesToEmit = 30
+        spk.position = imo.sprite.position
+        self.addChild(spk)
+    }
 }
 
 // MARK: - Extension-GamePresenterOutput
 
 extension GameScene: GamePresenterOutput {
-    
     func showFallSprite(){
+        let outOfScreen = -width/4
         wSprite.forEach{ w in
             w.position.y -= fallSpeed
-            if w.position.y < -width/4 {
+            if w.position.y < outOfScreen {
                 w.position = randomPos
             }
         }
         ripSprite.forEach{ rip in
             rip.position.y -= fallSpeed
-            if rip.position.y < -width/4 {
+            if rip.position.y < outOfScreen {
                 rip.position = randomPos
             }
         }
         kinokoSprite.forEach{ kinoko in
             kinoko.position.y -= fallSpeed
-            if kinoko.position.y < -width/4 {
+            if kinoko.position.y < outOfScreen {
                 kinoko.position = randomPos
             }
         }
         kanSprite.forEach{ kan in
             kan.position.y -= fallSpeed
-            if kan.position.y < -width/4 {
+            if kan.position.y < outOfScreen{
                 kan.position = randomPos
             }
         }
@@ -156,46 +178,6 @@ extension GameScene: GamePresenterOutput {
             imo.sprite.position.x = width
         }else if(imo.sprite.position.x > width){
             imo.sprite.position.x = 0
-        }
-    }
-    
-    func showCollisionSprite() {
-        ripSprite.forEach{ rip in
-            let rx = imo.sprite.position.x - rip.position.x
-            let ry = imo.sprite.position.y - rip.position.y
-            let distance = sqrt(rx * rx + ry * ry)
-            
-            if distance < imo.sprite.size.width{
-                monyu()
-                score += 300
-                rip.position.y = CGFloat.random(in: height...height*2)
-                presenter.playItemsound()
-            }
-        }
-        kinokoSprite.forEach{ kinoko in
-            let rx = imo.sprite.position.x - kinoko.position.x
-            let ry = imo.sprite.position.y - kinoko.position.y
-            let distance = sqrt(rx * rx + ry * ry)
-            if distance < imo.sprite.size.width{
-                monyu()
-                score += 100
-                kinoko.position.y = CGFloat.random(in: height...height*2)
-                presenter.playItemsound()
-            }
-        }
-        kanSprite.forEach{ kan in
-            let rx = imo.sprite.position.x - kan.position.x
-            let ry = imo.sprite.position.y - kan.position.y
-            let distance = sqrt(rx * rx + ry * ry)
-            if distance < imo.sprite.size.width{
-                let spk = SKEmitterNode(fileNamed: "Spark")!
-                spk.numParticlesToEmit = 30
-                spk.position = imo.sprite.position
-                self.addChild(spk)
-                kan.position.y = CGFloat.random(in: height...height*2)
-                presenter.playDamageSound()
-                missCount += 1
-            }
         }
     }
 }

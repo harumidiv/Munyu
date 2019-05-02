@@ -16,11 +16,10 @@ protocol GameModel {
     func ripCollision(collisionRange: Float, imo: ObjectPosition, rip: [ObjectPosition]) -> Bool
     func kinokoCollirion(collisionRange: Float, imo: ObjectPosition, kinoko: [ObjectPosition]) -> Bool
     func getAcceldata(accelX:@escaping(_ result: Float)->Void)
+    func isCollision(item1: ObjectPosition, item2: ObjectPosition, range: Float) -> Bool 
 }
 
 class GameModelImpl: GameModel {
-    
-    
     private var item: AVAudioPlayer
     private var damage: AVAudioPlayer
     private var motionManager:CMMotionManager
@@ -43,6 +42,17 @@ class GameModelImpl: GameModel {
         motionManager = CMMotionManager()
         
     }
+    
+    func isCollision(item1: ObjectPosition, item2: ObjectPosition, range: Float) -> Bool {
+        let rx = item1.x - item2.x
+        let ry = item1.y - item2.y
+        let distance = sqrt(rx * rx + ry * ry)
+        
+        return distance < range ? true:false
+    }
+    
+    
+    
     
     func getAcceldata(accelX: @escaping (Float) -> Void) {
         if motionManager.isAccelerometerAvailable {
