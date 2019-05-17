@@ -18,17 +18,14 @@ class MunyuTests: XCTestCase {
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
-
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testCollision(){
+        let model = GameModelImpl()
+        let position1 = ObjectPosition(x: 100, y: 100)
+        let position2 = ObjectPosition(x: 150, y: 150)
+        var range:Float = 80
+        XCTAssertTrue(model.isCollision(item1: position1, item2: position2, range: range))
+        
+        range = 50
+        XCTAssertFalse(model.isCollision(item1: position1, item2: position2, range: range))
     }
-
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
-
 }

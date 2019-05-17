@@ -13,8 +13,6 @@ import CoreMotion
 protocol GameModel {
     func damageSoundPlay()
     func itemSoundPlay()
-    func ripCollision(collisionRange: Float, imo: ObjectPosition, rip: [ObjectPosition]) -> Bool
-    func kinokoCollirion(collisionRange: Float, imo: ObjectPosition, kinoko: [ObjectPosition]) -> Bool
     func getAcceldata(accelX:@escaping(_ result: Float)->Void)
     func isCollision(item1: ObjectPosition, item2: ObjectPosition, range: Float) -> Bool 
 }
@@ -51,9 +49,6 @@ class GameModelImpl: GameModel {
         return distance < range ? true:false
     }
     
-    
-    
-    
     func getAcceldata(accelX: @escaping (Float) -> Void) {
         if motionManager.isAccelerometerAvailable {
             motionManager.accelerometerUpdateInterval = 0.1
@@ -65,40 +60,16 @@ class GameModelImpl: GameModel {
             })
         }
     }
-    func ripCollision(collisionRange: Float,imo: ObjectPosition, rip: [ObjectPosition]) -> Bool {
-        return false
-    }
-    
-    func kinokoCollirion(collisionRange: Float, imo: ObjectPosition, kinoko: [ObjectPosition]) -> Bool {
-        var retVal = false
-        kinoko.forEach{ kPos in
-            let rx = imo.x - kPos.x
-            let ry = imo.y - kPos.y
-            let distance = sqrt(rx * rx + ry * ry)
-            
-            if distance < collisionRange {
-                if item.isPlaying == true
-                {
-                    item.currentTime = 0;
-                }
-                itemSoundPlay()
-                retVal = true
-            }
-        }
-        return retVal
-    }
     
     func itemSoundPlay() {
-        if item.isPlaying == true
-        {
+        if item.isPlaying {
             item.currentTime = 0;
         }
         item.play()
     }
     
     func damageSoundPlay() {
-        if damage.isPlaying == true
-        {
+        if damage.isPlaying {
             damage.currentTime = 0;
         }
         damage.play()
