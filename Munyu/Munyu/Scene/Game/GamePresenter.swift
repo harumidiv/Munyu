@@ -9,21 +9,21 @@
 import Foundation
 import CoreMotion
 
-protocol GamePresenter {
+protocol GamePresenter:class {
     func update()
     func playItemsound()
     func playDamageSound()
     func getAcceldata(accelX:@escaping(_ result: Float)->Void)
     func isCollision(item1: ObjectPosition, item2:ObjectPosition, range: Float) -> Bool
 }
-protocol GamePresenterOutput {
+protocol GamePresenterOutput:class {
     func showFallSprite()
     func showPlayerPosition()
 }
 
 class GamePresenterImpl: GamePresenter {
     private var model: GameModel
-    private var output: GamePresenterOutput
+    private weak var output: GamePresenterOutput?
     init(model: GameModel, output: GamePresenterOutput) {
         self.model = model
         self.output = output
@@ -45,7 +45,7 @@ class GamePresenterImpl: GamePresenter {
     }
     
     func update() {
-        output.showFallSprite()
-        output.showPlayerPosition()
+        output?.showFallSprite()
+        output?.showPlayerPosition()
     }
 }
