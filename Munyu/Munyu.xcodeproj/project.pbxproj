@@ -29,6 +29,7 @@
 		0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD696522769236000DBD93 /* SKScene+Addition.swift */; };
 		0DFD6968227694E8000DBD93 /* CGPoint+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */; };
 		0DFD696E227719FD000DBD93 /* Spark.sks in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD696D227719FD000DBD93 /* Spark.sks */; };
+		49EF5314257B3AE4001396C8 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49EF5313257B3AE4001396C8 /* GameKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,6 +78,7 @@
 		0DFD696522769236000DBD93 /* SKScene+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKScene+Addition.swift"; sourceTree = "<group>"; };
 		0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPoint+Addition.swift"; sourceTree = "<group>"; };
 		0DFD696D227719FD000DBD93 /* Spark.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Spark.sks; sourceTree = "<group>"; };
+		49EF5313257B3AE4001396C8 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				49EF5314257B3AE4001396C8 /* GameKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -111,6 +114,7 @@
 				0D54E6BA227462B300AADEA2 /* MunyuTests */,
 				0D54E6C5227462B300AADEA2 /* MunyuUITests */,
 				0D54E6A4227462B100AADEA2 /* Products */,
+				49EF5312257B3AE4001396C8 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -226,6 +230,14 @@
 			path = Entity;
 			sourceTree = "<group>";
 		};
+		49EF5312257B3AE4001396C8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				49EF5313257B3AE4001396C8 /* GameKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -288,6 +300,9 @@
 		0D54E69B227462B100AADEA2 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					New,
+				);
 				LastSwiftUpdateCheck = 1020;
 				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "佐川晴海";

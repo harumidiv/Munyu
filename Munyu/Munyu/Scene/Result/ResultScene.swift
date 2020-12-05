@@ -7,6 +7,7 @@
 //
 
 import SpriteKit
+import GameKit
 
 class ResultScene: SKScene {
     lazy var endLabel = SKLabelNode(fontName: "Chalkduster", text: "GAMEOVER", fontSize: 60, pos: CGPoint(x: width/2, y: height - height/6))
@@ -32,6 +33,7 @@ class ResultScene: SKScene {
     
     override func didMove(to view: SKView) {
         self.addChild(endLabel, replayLabel, imoSprite, scoreLabel)
+        sendLeaderboardWithID(ID: "munyu.score.ranking", rate: Int64(score))
     }
     
     // MARK: - Event
@@ -44,6 +46,26 @@ class ResultScene: SKScene {
                 let scene = TitleScene(size: self.size)
                 self.view!.presentScene(scene)
             }
+        }
+    }
+    
+    // MARK: - Private Method
+    
+    func sendLeaderboardWithID(ID:String, rate:Int64) -> Void {
+        //Leaderboard用のインスタンス
+        let score = GKScore(leaderboardIdentifier: ID)
+        if GKLocalPlayer.local.isAuthenticated {
+            //スコアを設定
+            score.value = rate
+            print("最高値送信")
+            GKScore.report([score], withCompletionHandler: { (error) in
+                if error != nil {
+                    // エラーの場合
+                    print("GameCenter送信時にエラー \(String(describing: error))")
+                }
+            })
+        } else {
+            print("GameCenterにログインしてない！？Σ(((°Д°;))))ｶﾞｸｶﾞｸ")
         }
     }
 }
