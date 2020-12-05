@@ -25,12 +25,15 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
         let size = CGSize(width: skView.bounds.size.width, height: skView.bounds.size.height)
         let scene = TitleScene(size: size)
         skView.presentScene(scene)
-        authenticateLocalPlayer()
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(openLeaderBordScoreLanking),
                                                name: .leaderBordScoreRanking,
                                                object: nil)
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        authenticateLocalPlayer()
     }
     
     func authenticateLocalPlayer() {
