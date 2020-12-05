@@ -14,6 +14,7 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
     lazy var replayLabel = SKLabelNode(fontName: "Verdana-bold", text: "REPLAY", fontSize: 70, pos: CGPoint(x: width/2, y: height/7))
     lazy var imoSprite = SKSpriteNode(imageNamed: "imoEnd.png", size: CGSize(width: width, height: height/2), pos: CGPoint(x: width/2, y: height/2))
     lazy var scoreLabel = SKLabelNode(fontName: "Verdana-bold", text: "score: \(score)", fontSize: 40, pos: CGPoint(x: width/2, y: height - height/4))
+    lazy var rankingButton = SKSpriteNode(imageNamed: "ranking", size: CGSize(width: width/4, height: height/8), pos: CGPoint(x: width / 6, y: height/4))
     
     let score: Int
     
@@ -32,7 +33,7 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
     // MARK: - LifeCycle
     
     override func didMove(to view: SKView) {
-        self.addChild(endLabel, replayLabel, imoSprite, scoreLabel)
+        self.addChild(endLabel, replayLabel, imoSprite, scoreLabel, rankingButton)
         sendLeaderboardWithID(ID: "munyu.score.ranking", rate: Int64(score))
     }
     
@@ -45,27 +46,26 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
             if touchNode == replayLabel {
                 let scene = TitleScene(size: self.size)
                 self.view!.presentScene(scene)
-            } else {
+            } else if touchNode == rankingButton {
                 NotificationCenter.default.post(name: .leaderBordScoreRanking, object: nil)
             }
         }
     }
     
     func sendLeaderboardWithID(ID:String, rate:Int64) -> Void {
-        //Leaderboard用のインスタンス
         let score = GKScore(leaderboardIdentifier: ID)
         if GKLocalPlayer.local.isAuthenticated {
             //スコアを設定
             score.value = rate
-            print("最高値送信")
+            print("success")
             GKScore.report([score], withCompletionHandler: { (error) in
                 if error != nil {
                     // エラーの場合
-                    print("GameCenter送信時にエラー \(String(describing: error))")
+                    print("error: \(String(describing: error))")
                 }
             })
         } else {
-            print("GameCenterにログインしてない！？Σ(((°Д°;))))ｶﾞｸｶﾞｸ")
+            print("GameCenterにログインしていません")
         }
     }
     
