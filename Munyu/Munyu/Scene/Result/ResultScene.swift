@@ -9,7 +9,7 @@
 import SpriteKit
 import GameKit
 
-class ResultScene: SKScene {
+class ResultScene: SKScene, UINavigationControllerDelegate {
     lazy var endLabel = SKLabelNode(fontName: "Chalkduster", text: "GAMEOVER", fontSize: 60, pos: CGPoint(x: width/2, y: height - height/6))
     lazy var replayLabel = SKLabelNode(fontName: "Verdana-bold", text: "REPLAY", fontSize: 70, pos: CGPoint(x: width/2, y: height/7))
     lazy var imoSprite = SKSpriteNode(imageNamed: "imoEnd.png", size: CGSize(width: width, height: height/2), pos: CGPoint(x: width/2, y: height/2))
@@ -45,11 +45,11 @@ class ResultScene: SKScene {
             if touchNode == replayLabel {
                 let scene = TitleScene(size: self.size)
                 self.view!.presentScene(scene)
+            } else {
+                NotificationCenter.default.post(name: .leaderBordScoreRanking, object: nil)
             }
         }
     }
-    
-    // MARK: - Private Method
     
     func sendLeaderboardWithID(ID:String, rate:Int64) -> Void {
         //Leaderboard用のインスタンス
@@ -68,4 +68,9 @@ class ResultScene: SKScene {
             print("GameCenterにログインしてない！？Σ(((°Д°;))))ｶﾞｸｶﾞｸ")
         }
     }
+    
+}
+
+extension Notification.Name {
+    static var leaderBordScoreRanking = Notification.Name("leaderBordScoreRanking")
 }

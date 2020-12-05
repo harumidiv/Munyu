@@ -10,7 +10,7 @@ import UIKit
 import SpriteKit
 import GameKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UINavigationControllerDelegate {
     
     override func loadView() {
         let skView = SKView(frame: UIScreen.main.bounds)
@@ -26,6 +26,11 @@ class ViewController: UIViewController {
         let scene = TitleScene(size: size)
         skView.presentScene(scene)
         authenticateLocalPlayer()
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(openLeaderBordScoreLanking),
+                                               name: .leaderBordScoreRanking,
+                                               object: nil)
     }
     
     func authenticateLocalPlayer() {
@@ -39,6 +44,23 @@ class ViewController: UIViewController {
             }
         }
     }
+    
+    @objc func openLeaderBordScoreLanking() {
+        let localPlayer = GKLocalPlayer()
+        localPlayer.loadDefaultLeaderboardIdentifier(completionHandler: {leaderboardIdentifier,error in
+            if error != nil {
+                print(error.debugDescription)
+            } else {
+                
+                let gcvc:GKGameCenterViewController = GKGameCenterViewController()
+                gcvc.gameCenterDelegate = self
+                gcvc.viewState = .leaderboards
+                gcvc.leaderboardIdentifier = "munyu.score.ranking"
+                self.present(gcvc, animated: true, completion: nil)
+            }
+        })
+    }
+
 }
 
 extension ViewController: GKGameCenterControllerDelegate {
