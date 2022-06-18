@@ -47,7 +47,7 @@ jobs:
           done
 
       - name: Build | xcodebuild archive
-        run: set -o pipefail && xcodebuild -workspace project.xcworkspace -scheme Munyu -configuration Release archive -archivePath ./archive | xcpretty
+        run: set -o pipefail && xcodebuild -workspace Munyu.xcodeproj/project.xcworkspace -scheme Munyu -configuration Release archive -archivePath ./archive | xcpretty
 
       - name: Build | xcodebuild export
         run: set -o pipefail && xcodebuild -exportArchive -archivePath ./archive.xcarchive -exportPath ./build -exportOptionsPlist ./Munyu/exportOptions.plist | xcpretty
