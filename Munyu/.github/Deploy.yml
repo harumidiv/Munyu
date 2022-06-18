@@ -1,0 +1,69 @@
+# ワークフローの名前、Actions上に表示される
+name: ipaをAppStoreとFirebase Distributionにあげる
+on: push
+
+jobs:
+  main:
+    runs-on: macOS-latest
+    env:
+      KEYCHAIN: '/Library/Keychains/System.keychain'
+      ASC_KEY_ID: C538N5NKPK
+      ASC_ISSUER_ID: def67d36-9a40-4ec1-a18e-f0b94bf3c072
+
+    steps:
+      - name: Setup | Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup | Xcode 13.2
+        run: sudo xcode-select -s '/Applications/Xcode_13.2.app/Contents/Developer'
+
+      - name: Setup | App Store Connect API
+        id: asc
+        uses: yuki0n0/action-appstoreconnect-token@v1.0
+        with:
+          key id: ${{ env.ASC_KEY_ID }}
+          issuer id: ${{ env.ASC_ISSUER_ID }}
+          key: ${{ secrets.P8_APPSTORECONNECT_API }}
+      - run: echo "success!!"
+
+      # cocoaPod
+      - name: Cache | cocoapods
+        uses: actions/cache@v1
+        with:
+          path: Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-pods-
+
+      - name: Install | cocoapods
+        run: pod install --repo-update
+
+      # keychain
+      - name: Keychain | p12
+        run: |
+          echo "${{ secrets.P12_BASE64 }}" > ios_distribution.p12.txt
+          base64 --decode ios_distribution.p12.txt > ios_distribution.p12
+          sudo security import ios_distribution.p12 -k $KEYCHAIN -P ${{ secrets.P12_PASSWORD }} -T /usr/bin/codesign
+      
+      # build
+      - name: Build | provisioning profile
+        run: |
+          JSON=`curl -sSg -H "Authorization:Bearer ${{ steps.asc.outputs.token }}" https://api.appstoreconnect.apple.com/v1/profiles/harumidiv.Munyu`
+          LEN=`echo $JSON | jq .data | jq length`
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          for i in `seq 0 $(($LEN - 1))`; do
+            uuid=`echo $JSON | jq -r .data[$i].attributes.uuid`
+            echo $JSON | jq -r .data[$i].attributes.profileContent > $uuid.txt
+            base64 --decode $uuid.txt > ~/Library/MobileDevice/Provisioning\ Profiles/$uuid.mobileprovision
+          done
+
+      - name: Build | xcodebuild archive
+        run: set -o pipefail && xcodebuild -workspace project.xcworkspace -scheme Munyu -configuration Release archive -archivePath ./archive | xcpretty
+
+      - name: Build | xcodebuild export
+        run: set -o pipefail && xcodebuild -exportArchive -archivePath ./archive.xcarchive -exportPath ./build -exportOptionsPlist ./Munyu/exportOptions.plist | xcpretty
+      - name: Upload | altool
+        run: |
+          mkdir ~/private_keys; echo "${{ secrets.P8_APPSTORECONNECT_API }}" > ~/private_keys/AuthKey_$ASC_KEY_ID.p8
+          xcrun altool --upload-app -f ./stubBuild/Munyu.ipa -t ios --apiKey $ASC_KEY_ID --apiIssuer $ASC_ISSUER_ID
+
