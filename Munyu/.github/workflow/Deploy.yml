@@ -26,17 +26,6 @@ jobs:
           key: ${{ secrets.P8_APPSTORECONNECT_API }}
       - run: echo "success!!"
 
-      # cocoaPod
-      - name: Cache | cocoapods
-        uses: actions/cache@v1
-        with:
-          path: Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
-          restore-keys: ${{ runner.os }}-pods-
-
-      - name: Install | cocoapods
-        run: pod install --repo-update
-
       # keychain
       - name: Keychain | p12
         run: |
