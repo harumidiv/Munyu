@@ -58,7 +58,7 @@ class ViewController: UIViewController, UINavigationControllerDelegate {
                 let gcvc:GKGameCenterViewController = GKGameCenterViewController()
                 gcvc.gameCenterDelegate = self
                 gcvc.viewState = .leaderboards
-                gcvc.leaderboardIdentifier = "munyu.score.ranking"
+                gcvc.leaderboardIdentifier = "munyu.best.score.lanking"
                 self.present(gcvc, animated: true, completion: nil)
             }
         })

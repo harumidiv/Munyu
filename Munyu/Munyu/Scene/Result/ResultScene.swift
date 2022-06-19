@@ -34,7 +34,7 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
     
     override func didMove(to view: SKView) {
         self.addChild(endLabel, replayLabel, imoSprite, scoreLabel, rankingButton)
-        sendLeaderboardWithID(ID: "munyu.score.ranking", rate: Int64(score))
+        sendLeaderboardWithID(ID: "munyu.best.score.lanking", rate: Int64(score))
     }
     
     // MARK: - Event
