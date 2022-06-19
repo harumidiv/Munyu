@@ -7,6 +7,7 @@ temp.plist
  
 # Build dir
 build/
+*.xcarchive/
  
 # Xcode project files except for the project file
 *.xcodeproj/*
