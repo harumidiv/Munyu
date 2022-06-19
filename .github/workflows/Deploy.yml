@@ -46,10 +46,12 @@ jobs:
             base64 --decode $uuid.txt > ~/Library/MobileDevice/Provisioning\ Profiles/$uuid.mobileprovision
           done
 
-      - name: Build | xcodebuild archive
+#      - name: Build | xcodebuild archive
+#        run: set -o pipefail && xcodebuild -workspace ./Munyu.xcodeproj/project.xcworkspace -scheme Munyu -configuration Release archive -archivePath ./archive | xcpretty
+        
         run: |
-          UUID=`/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/Munyu.mobileprovision)`
-          xcodebuild -workspace Munyu.xcodeproj/project.xcworkspace -scheme Munyu -configuration Release clean archive -archivePath ./archive -sdk 'iphoneos' -destination 'generic/platform=iOS' DEVELOPMENT_TEAM=Harumi Sagawa CODE_SIGN_IDENTITY='Apple Distribution: Harumi Sagawa. (24BSY9Z4H5)' PROVISIONING_PROFILE=$UUID
+          UUID=`/usr/libexec/PlistBuddy -c 'Print :UUID' /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/Munyu.mobileprovision)`; echo "$UUID"
+#          xcodebuild -workspace Munyu.xcodeproj/project.xcworkspace -scheme Munyu -configuration Release clean archive -archivePath ./archive -sdk 'iphoneos' -destination 'generic/platform=iOS' DEVELOPMENT_TEAM=Harumi Sagawa CODE_SIGN_IDENTITY='Apple Distribution: Harumi Sagawa. (24BSY9Z4H5)' PROVISIONING_PROFILE=$UUID
 
       - name: Build | xcodebuild export
         run: set -o pipefail && xcodebuild -exportArchive -archivePath ./archive.xcarchive -exportPath ./build -exportOptionsPlist ./Munyu/exportOptions.plist | xcpretty
