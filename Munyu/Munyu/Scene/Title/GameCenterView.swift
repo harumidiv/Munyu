@@ -11,7 +11,6 @@ import SwiftUI
 import GameKit
 
 struct GameCenterView: UIViewControllerRepresentable {
-    @Binding var isPresented: Bool
     
     // UIViewControllerを生成する
     func makeUIViewController(context: Context) -> GKGameCenterViewController {
@@ -28,19 +27,14 @@ struct GameCenterView: UIViewControllerRepresentable {
     
     // デリゲートを処理するCoordinatorクラス
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator()
     }
     
     class Coordinator: NSObject, GKGameCenterControllerDelegate {
-        var parent: GameCenterView
-        
-        init(_ parent: GameCenterView) {
-            self.parent = parent
-        }
-        
-        // Game Centerビューが閉じられたときに呼ばれる
         func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
-            parent.isPresented = false // 親ビューの表示を閉じる
+            // モーダルを閉じる
+            gameCenterViewController.dismiss(animated: true, completion: nil)
         }
+
     }
 }

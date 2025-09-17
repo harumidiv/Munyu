@@ -27,12 +27,10 @@ struct ContentView: View {
             }) {
                 if let vc = gameCenterAuthVC {
                     GameCenterAuthView(authVC: vc, isPresented: $isShowingGameCenterAuth)
-                } else {
-                    EmptyView()
                 }
             }
             .sheet(isPresented: $isShowBestScore) {
-                GameCenterView(isPresented: $isShowingGameCenterAuth)
+                GameCenterView()
             }
             
     }
