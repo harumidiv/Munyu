@@ -29,6 +29,7 @@
 		0DFD696E227719FD000DBD93 /* Spark.sks in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD696D227719FD000DBD93 /* Spark.sks */; };
 		49C8DBE22E7A83870071CC9B /* MunyuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8DBE12E7A83870071CC9B /* MunyuApp.swift */; };
 		49C8DBE42E7A83890071CC9B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8DBE32E7A83890071CC9B /* ContentView.swift */; };
+		49C8DC512E7AEB6C0071CC9B /* GameCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */; };
 		49EF5314257B3AE4001396C8 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49EF5313257B3AE4001396C8 /* GameKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -78,6 +79,8 @@
 		0DFD696D227719FD000DBD93 /* Spark.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Spark.sks; sourceTree = "<group>"; };
 		49C8DBE12E7A83870071CC9B /* MunyuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MunyuApp.swift; sourceTree = "<group>"; };
 		49C8DBE32E7A83890071CC9B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		49C8DC4F2E7AE99C0071CC9B /* Munyu.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Munyu.entitlements; sourceTree = "<group>"; };
+		49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterView.swift; sourceTree = "<group>"; };
 		49EF5313257B3AE4001396C8 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -131,6 +134,7 @@
 		0D54E6A5227462B100AADEA2 /* Munyu */ = {
 			isa = PBXGroup;
 			children = (
+				49C8DC4F2E7AE99C0071CC9B /* Munyu.entitlements */,
 				0DFD69602275786A000DBD93 /* Entity */,
 				0DFD694D22755551000DBD93 /* Sound */,
 				0DFD6952227555D2000DBD93 /* Extension */,
@@ -195,6 +199,7 @@
 		0DFD6957227575D2000DBD93 /* Title */ = {
 			isa = PBXGroup;
 			children = (
+				49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */,
 				0D54E6D4227462E800AADEA2 /* TitleScene.swift */,
 				49C8DBE12E7A83870071CC9B /* MunyuApp.swift */,
 				49C8DBE32E7A83890071CC9B /* ContentView.swift */,
@@ -387,6 +392,7 @@
 				0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */,
 				0DFD695F22757858000DBD93 /* Player.swift in Sources */,
 				0DFD695622755A20000DBD93 /* SKSpriteNode+Addition.swift in Sources */,
+				49C8DC512E7AEB6C0071CC9B /* GameCenterView.swift in Sources */,
 				49C8DBE22E7A83870071CC9B /* MunyuApp.swift in Sources */,
 				0DFD695B22757605000DBD93 /* GamePresenter.swift in Sources */,
 			);
@@ -563,8 +569,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Munyu/Munyu.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
@@ -575,6 +583,7 @@
 				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = harumidiv.Munyu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -584,8 +593,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Munyu/Munyu.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
@@ -596,6 +607,7 @@
 				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = harumidiv.Munyu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
