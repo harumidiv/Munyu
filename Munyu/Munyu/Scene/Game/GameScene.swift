@@ -112,6 +112,7 @@ class GameScene: SKScene {
                 addSpark()
                 kan.position.y = CGFloat.random(in: height...height*2)
                 presenter.playDamageSound()
+                UIImpactFeedbackGenerator(style: .soft).impactOccurred()
                 missCount += 1
             }
         }
