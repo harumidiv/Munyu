@@ -22,6 +22,8 @@ class GameModelImpl: GameModel {
     private var damage: AVAudioPlayer
     private var motionManager:CMMotionManager
     
+    private let motionQueue = OperationQueue()
+    
     init() {
         var path = Bundle.main.path(forResource: "kan", ofType: "mp3")
         var url = URL(fileURLWithPath: path!)
@@ -50,16 +52,22 @@ class GameModelImpl: GameModel {
     }
     
     func getAcceldata(accelX: @escaping (Float) -> Void) {
-        if motionManager.isAccelerometerAvailable {
-            motionManager.accelerometerUpdateInterval = 0.1
-            
-            motionManager.startAccelerometerUpdates(
-                to: OperationQueue.current!,
-                withHandler: {(accelData: CMAccelerometerData?, errorOC: Error?) in
-                    accelX(Float(accelData!.acceleration.x * 20))
-            })
+            if motionManager.isAccelerometerAvailable {
+                motionManager.accelerometerUpdateInterval = 0.1
+                
+                motionManager.startAccelerometerUpdates(
+                    to: motionQueue, // バックグラウンドのキューを使用
+                    withHandler: {(accelData: CMAccelerometerData?, errorOC: Error?) in
+                        // UIの更新はメインスレッドに戻す
+                        DispatchQueue.main.async {
+                            if let acceleration = accelData?.acceleration.x {
+                                accelX(Float(acceleration * 20))
+                            }
+                        }
+                    }
+                )
+            }
         }
-    }
     
     func itemSoundPlay() {
         if item.isPlaying {
