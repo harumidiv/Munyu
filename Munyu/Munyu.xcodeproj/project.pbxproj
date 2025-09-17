@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0D048FD3227897DD00852FFA /* Difficulty.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D048FD2227897DD00852FFA /* Difficulty.swift */; };
-		0D54E6A7227462B100AADEA2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6A6227462B100AADEA2 /* AppDelegate.swift */; };
-		0D54E6A9227462B100AADEA2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6A8227462B100AADEA2 /* ViewController.swift */; };
 		0D54E6AC227462B100AADEA2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D54E6AA227462B100AADEA2 /* Main.storyboard */; };
 		0D54E6AE227462B300AADEA2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D54E6AD227462B300AADEA2 /* Assets.xcassets */; };
 		0D54E6B1227462B300AADEA2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D54E6AF227462B300AADEA2 /* LaunchScreen.storyboard */; };
@@ -29,6 +27,8 @@
 		0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD696522769236000DBD93 /* SKScene+Addition.swift */; };
 		0DFD6968227694E8000DBD93 /* CGPoint+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */; };
 		0DFD696E227719FD000DBD93 /* Spark.sks in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD696D227719FD000DBD93 /* Spark.sks */; };
+		49C8DBE22E7A83870071CC9B /* MunyuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8DBE12E7A83870071CC9B /* MunyuApp.swift */; };
+		49C8DBE42E7A83890071CC9B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8DBE32E7A83890071CC9B /* ContentView.swift */; };
 		49EF5314257B3AE4001396C8 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49EF5313257B3AE4001396C8 /* GameKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -52,8 +52,6 @@
 /* Begin PBXFileReference section */
 		0D048FD2227897DD00852FFA /* Difficulty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Difficulty.swift; sourceTree = "<group>"; };
 		0D54E6A3227462B100AADEA2 /* Munyu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Munyu.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0D54E6A6227462B100AADEA2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		0D54E6A8227462B100AADEA2 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		0D54E6AB227462B100AADEA2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		0D54E6AD227462B300AADEA2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0D54E6B0227462B300AADEA2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -78,6 +76,8 @@
 		0DFD696522769236000DBD93 /* SKScene+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKScene+Addition.swift"; sourceTree = "<group>"; };
 		0DFD6967227694E8000DBD93 /* CGPoint+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPoint+Addition.swift"; sourceTree = "<group>"; };
 		0DFD696D227719FD000DBD93 /* Spark.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = Spark.sks; sourceTree = "<group>"; };
+		49C8DBE12E7A83870071CC9B /* MunyuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MunyuApp.swift; sourceTree = "<group>"; };
+		49C8DBE32E7A83890071CC9B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		49EF5313257B3AE4001396C8 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -135,8 +135,6 @@
 				0DFD694D22755551000DBD93 /* Sound */,
 				0DFD6952227555D2000DBD93 /* Extension */,
 				0D54E6D62275537E00AADEA2 /* Scene */,
-				0D54E6A6227462B100AADEA2 /* AppDelegate.swift */,
-				0D54E6A8227462B100AADEA2 /* ViewController.swift */,
 				0DFD696D227719FD000DBD93 /* Spark.sks */,
 				0D54E6AD227462B300AADEA2 /* Assets.xcassets */,
 				0D54E6AA227462B100AADEA2 /* Main.storyboard */,
@@ -198,6 +196,8 @@
 			isa = PBXGroup;
 			children = (
 				0D54E6D4227462E800AADEA2 /* TitleScene.swift */,
+				49C8DBE12E7A83870071CC9B /* MunyuApp.swift */,
+				49C8DBE32E7A83890071CC9B /* ContentView.swift */,
 			);
 			path = Title;
 			sourceTree = "<group>";
@@ -377,17 +377,17 @@
 			files = (
 				0DFD6954227555E5000DBD93 /* SKLabelNode+Addition.swift in Sources */,
 				0DFD69642275932D000DBD93 /* ObjectPosition.swift in Sources */,
+				49C8DBE42E7A83890071CC9B /* ContentView.swift in Sources */,
 				0D048FD3227897DD00852FFA /* Difficulty.swift in Sources */,
-				0D54E6A9227462B100AADEA2 /* ViewController.swift in Sources */,
 				0DFD6968227694E8000DBD93 /* CGPoint+Addition.swift in Sources */,
 				0DFD695D22757636000DBD93 /* GameModel.swift in Sources */,
 				0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */,
-				0D54E6A7227462B100AADEA2 /* AppDelegate.swift in Sources */,
 				0D54E6D5227462E800AADEA2 /* TitleScene.swift in Sources */,
 				0DFD694A227553BB000DBD93 /* GameScene.swift in Sources */,
 				0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */,
 				0DFD695F22757858000DBD93 /* Player.swift in Sources */,
 				0DFD695622755A20000DBD93 /* SKSpriteNode+Addition.swift in Sources */,
+				49C8DBE22E7A83870071CC9B /* MunyuApp.swift in Sources */,
 				0DFD695B22757605000DBD93 /* GamePresenter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -567,7 +567,7 @@
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -588,7 +588,7 @@
 				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
