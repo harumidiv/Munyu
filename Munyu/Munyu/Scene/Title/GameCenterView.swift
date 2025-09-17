@@ -10,7 +10,6 @@
 import SwiftUI
 import GameKit
 
-// GKGameCenterViewControllerをラップする構造体
 struct GameCenterView: UIViewControllerRepresentable {
     @Binding var isPresented: Bool
     

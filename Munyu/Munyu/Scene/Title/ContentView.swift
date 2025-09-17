@@ -11,6 +11,7 @@ struct ContentView: View {
     
     @State private var gameCenterAuthVC: UIViewController? = nil
     @State private var isShowingGameCenterAuth: Bool = false
+    @State private var isShowBestScore: Bool = false
     
     var body: some View {
         SpriteView(scene: scene)
@@ -18,16 +19,22 @@ struct ContentView: View {
             .onAppear {
                 authenticateLocalPlayer()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .leaderBordScoreRanking)) { _ in
+                isShowBestScore.toggle()
+            }
             .sheet(isPresented: $isShowingGameCenterAuth, onDismiss: {
                 self.gameCenterAuthVC = nil
             }) {
                 if let vc = gameCenterAuthVC {
                     GameCenterAuthView(authVC: vc, isPresented: $isShowingGameCenterAuth)
                 } else {
-
                     EmptyView()
                 }
             }
+            .sheet(isPresented: $isShowBestScore) {
+                GameCenterView(isPresented: $isShowingGameCenterAuth)
+            }
+            
     }
     
     func authenticateLocalPlayer() {
