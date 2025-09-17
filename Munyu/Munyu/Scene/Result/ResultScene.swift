@@ -34,38 +34,60 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
     
     override func didMove(to view: SKView) {
         self.addChild(endLabel, replayLabel, imoSprite, scoreLabel, rankingButton)
-        sendLeaderboardWithID(ID: "munyu.best.score.lanking", rate: Int64(score))
+        if #available(iOS 14.0, *) {
+            sendLeaderboardWithID(ID: "munyu.best.score.lanking", rate: Int64(score))
+        } else {
+            sendLeaderboardWithID_legacy(ID: "munyu.best.score.lanking", rate: Int64(score))
+        }
     }
     
     // MARK: - Event
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touches:AnyObject in touches{
-            let location = touches.previousLocation(in: self)
-            let touchNode = self.atPoint(location)
-            if touchNode == replayLabel {
+        for touch in touches {
+            let location = touch.location(in: self)
+            let touchedNode = self.atPoint(location)
+
+            if touchedNode === replayLabel || touchedNode.inParentHierarchy(replayLabel) {
                 let scene = TitleScene(size: self.size)
-                self.view!.presentScene(scene)
-            } else if touchNode == rankingButton {
+                self.view?.presentScene(scene)
+            } else if touchedNode === rankingButton || touchedNode.inParentHierarchy(rankingButton) {
                 NotificationCenter.default.post(name: .leaderBordScoreRanking, object: nil)
             }
         }
     }
     
-    func sendLeaderboardWithID(ID:String, rate:Int64) -> Void {
+    @available(iOS 14.0, *)
+    func sendLeaderboardWithID(ID: String, rate: Int64) {
+        // Ensure the local player is authenticated before submitting
+        if GKLocalPlayer.local.isAuthenticated {
+            GKLeaderboard.submitScore(Int(rate), context: 0, player: GKLocalPlayer.local, leaderboardIDs: [ID]) { error in
+                if let error = error {
+                    print("Game Center submit error: \(error)")
+                } else {
+                    print("Game Center submit success")
+                }
+            }
+        } else {
+            print("Game Center: Player not authenticated")
+        }
+    }
+
+    // Backward compatibility for iOS versions prior to 14.0
+    @available(iOS, introduced: 9.0, deprecated: 14.0)
+    func sendLeaderboardWithID_legacy(ID: String, rate: Int64) {
         let score = GKScore(leaderboardIdentifier: ID)
         if GKLocalPlayer.local.isAuthenticated {
-            //スコアを設定
             score.value = rate
-            print("success")
-            GKScore.report([score], withCompletionHandler: { (error) in
-                if error != nil {
-                    // エラーの場合
-                    print("error: \(String(describing: error))")
+            GKScore.report([score]) { error in
+                if let error = error {
+                    print("Game Center legacy submit error: \(error)")
+                } else {
+                    print("Game Center legacy submit success")
                 }
-            })
+            }
         } else {
-            print("GameCenterにログインしていません")
+            print("Game Center: Player not authenticated")
         }
     }
     

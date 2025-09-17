@@ -9,14 +9,14 @@
 import Foundation
 import CoreMotion
 
-protocol GamePresenter:class {
+protocol GamePresenter:AnyObject {
     func update()
     func playItemsound()
     func playDamageSound()
     func getAcceldata(accelX:@escaping(_ result: Float)->Void)
     func isCollision(item1: ObjectPosition, item2:ObjectPosition, range: Float) -> Bool
 }
-protocol GamePresenterOutput:class {
+protocol GamePresenterOutput:AnyObject {
     func showFallSprite()
     func showPlayerPosition()
 }
