@@ -43,6 +43,10 @@ class GameScene: SKScene {
     
     var missCount: Int = 0
     var score = 0
+    // 生存ボーナス。60fps換算で1フレーム1点
+    private var survivalPoints: CGFloat = 0
+    private var lastUpdateTime: TimeInterval = 0
+    private var isGameOver = false
     let difficulty: Difficulty
     
     // MARK: - Initializer
@@ -67,15 +71,30 @@ class GameScene: SKScene {
         self.addChild(imo.sprite)
         imo.runAnimate()
         
-        presenter.getAcceldata(accelX: { self.acceleromateX = CGFloat($0)})
+        presenter.getAcceldata(accelX: { [weak self] in self?.acceleromateX = CGFloat($0) })
     }
-    
+
+    override func willMove(from view: SKView) {
+        super.willMove(from: view)
+        presenter.stopAcceldata()
+    }
+
     override func update(_ currentTime: TimeInterval) {
-        score += 1
+        guard !isGameOver else { return }
+
+        // リフレッシュレートに依存しないよう、60fps基準の倍率で移動量・スコアを補正する
+        // 復帰直後などの大きな飛びは1/20秒で打ち止め
+        let deltaTime = lastUpdateTime == 0 ? 1.0 / 60.0 : min(currentTime - lastUpdateTime, 1.0 / 20.0)
+        lastUpdateTime = currentTime
+        let frameScale = CGFloat(deltaTime * 60)
+
+        survivalPoints += frameScale
         if missCount > 5 {
+            isGameOver = true
             changeView()
+            return
         }
-        presenter.update()
+        presenter.update(frameScale: frameScale)
         
         // 衝突判定とアイテム処理を簡潔に
         processCollisions(items: ripSprite, scoreToAdd: 300, sound: { self.presenter.playItemsound() }, effect: { self.monyu() })
@@ -128,8 +147,8 @@ class GameScene: SKScene {
     }
     
     private func changeView() {
-        let scene = ResultScene(size: self.size, score: score)
-        self.view!.presentScene(scene)
+        let scene = ResultScene(size: self.size, score: score + Int(survivalPoints))
+        self.view?.presentScene(scene)
     }
     
     private func monyu(){
@@ -148,35 +167,38 @@ class GameScene: SKScene {
         spk.numParticlesToEmit = 30
         spk.position = imo.sprite.position
         self.addChild(spk)
+        // パーティクルの寿命(1秒)が過ぎたら取り除く
+        spk.run(SKAction.sequence([SKAction.wait(forDuration: 1.5), SKAction.removeFromParent()]))
     }
 }
 
 // MARK: - Extension-GamePresenterOutput
 
 extension GameScene: GamePresenterOutput {
-    func showFallSprite(){
+    func showFallSprite(frameScale: CGFloat){
         let outOfScreen = -width/4
-        
+        let distance = fallSpeed * frameScale
+
         wSprite.forEach { w in
-            w.position.y -= fallSpeed
+            w.position.y -= distance
             if w.position.y < outOfScreen { w.position = randomPos }
         }
         ripSprite.forEach { rip in
-            rip.position.y -= fallSpeed
+            rip.position.y -= distance
             if rip.position.y < outOfScreen { rip.position = randomPos }
         }
         kinokoSprite.forEach { kinoko in
-            kinoko.position.y -= fallSpeed
+            kinoko.position.y -= distance
             if kinoko.position.y < outOfScreen { kinoko.position = randomPos }
         }
         kanSprite.forEach { kan in
-            kan.position.y -= fallSpeed
+            kan.position.y -= distance
             if kan.position.y < outOfScreen { kan.position = randomPos }
         }
     }
-    
-    func showPlayerPosition() {
-        imo.sprite.position = CGPoint(x: imo.sprite.position.x + acceleromateX, y: imo.sprite.position.y)
+
+    func showPlayerPosition(frameScale: CGFloat) {
+        imo.sprite.position = CGPoint(x: imo.sprite.position.x + acceleromateX * frameScale, y: imo.sprite.position.y)
         if imo.sprite.position.x < 0 {
             imo.sprite.position.x = width
         } else if imo.sprite.position.x > width {

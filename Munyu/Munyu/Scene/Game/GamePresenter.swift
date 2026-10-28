@@ -10,15 +10,16 @@ import Foundation
 import CoreMotion
 
 protocol GamePresenter:AnyObject {
-    func update()
+    func update(frameScale: CGFloat)
     func playItemsound()
     func playDamageSound()
     func getAcceldata(accelX:@escaping(_ result: Float)->Void)
+    func stopAcceldata()
     func isCollision(item1: ObjectPosition, item2:ObjectPosition, range: Float) -> Bool
 }
 protocol GamePresenterOutput:AnyObject {
-    func showFallSprite()
-    func showPlayerPosition()
+    func showFallSprite(frameScale: CGFloat)
+    func showPlayerPosition(frameScale: CGFloat)
 }
 
 class GamePresenterImpl: GamePresenter {
@@ -36,7 +37,11 @@ class GamePresenterImpl: GamePresenter {
     func getAcceldata(accelX:@escaping (_ result: Float)->Void) {
         model.getAcceldata(accelX: {accelX($0)})
     }
-    
+
+    func stopAcceldata() {
+        model.stopAcceldata()
+    }
+
     func playItemsound(){
         model.itemSoundPlay()
     }
@@ -44,8 +49,8 @@ class GamePresenterImpl: GamePresenter {
         model.damageSoundPlay()
     }
     
-    func update() {
-        output?.showFallSprite()
-        output?.showPlayerPosition()
+    func update(frameScale: CGFloat) {
+        output?.showFallSprite(frameScale: frameScale)
+        output?.showPlayerPosition(frameScale: frameScale)
     }
 }
