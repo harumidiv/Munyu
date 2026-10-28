@@ -14,6 +14,7 @@ protocol GameModel {
     func damageSoundPlay()
     func itemSoundPlay()
     func getAcceldata(accelX:@escaping(_ result: Float)->Void)
+    func stopAcceldata()
     func isCollision(item1: ObjectPosition, item2: ObjectPosition, range: Float) -> Bool 
 }
 
@@ -68,7 +69,11 @@ class GameModelImpl: GameModel {
                 )
             }
         }
-    
+
+    func stopAcceldata() {
+        motionManager.stopAccelerometerUpdates()
+    }
+
     func itemSoundPlay() {
         if item.isPlaying {
             item.currentTime = 0;

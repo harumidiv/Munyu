@@ -3,11 +3,12 @@ import SpriteKit
 import GameKit
 
 struct ContentView: View {
-    var scene: SKScene {
+    // 再描画のたびにシーンが作り直されないよう State で保持する
+    @State private var scene: SKScene = {
         let scene = TitleScene(size: UIScreen.main.bounds.size)
         scene.scaleMode = .resizeFill
         return scene
-    }
+    }()
     
     @State private var gameCenterAuthVC: UIViewController? = nil
     @State private var isShowingGameCenterAuth: Bool = false
