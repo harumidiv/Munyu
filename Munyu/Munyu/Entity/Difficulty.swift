@@ -12,6 +12,13 @@ enum Difficulty {
     case easy
     case normal
     case hard
+    var title: String {
+        switch self {
+        case .easy: return "EASY"
+        case .normal: return "NORMAL"
+        case .hard: return "HARD"
+        }
+    }
     func count() -> (rip: Int, kinoko: Int, kan: Int) {
         switch self {
         case .easy:
