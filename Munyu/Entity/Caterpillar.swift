@@ -1,0 +1,168 @@
+//
+//  Caterpillar.swift
+//  Munyu
+//
+//  主人公の芋虫。真上から見た形で、頭（唇が先頭）の後ろに節が付いてくる。
+//  左右に動くと体がくねり、唇はいつもむにゅむにゅ動く。
+//
+
+import SpriteKit
+
+final class CaterpillarNode: SKNode {
+
+    /// 頭の中心から見た節の位置（y は下向き）
+    struct Segment {
+        let dx: CGFloat
+        let dy: CGFloat
+        let r: CGFloat
+    }
+
+    private(set) var stage: Int
+    var element: Element? {
+        didSet { if oldValue != element { refreshLooks() } }
+    }
+    var dizzy = false
+    /// 口を大きく開けている残り時間
+    var openTime: CGFloat = 0
+
+    private(set) var vx: CGFloat = 0
+    private var wig: CGFloat = 0
+    private var ph: CGFloat = 0
+    private var time: CGFloat = 0
+    private var currentX: CGFloat = 0
+    private var trail: [CGFloat] = []
+
+    private let aura = Art.glow.sprite()
+    private let wings = [SKSpriteNode(), SKSpriteNode()]
+    private var segNodes: [SKSpriteNode] = []
+    private let tailGlow = Art.glow.sprite()
+    private let head = SKSpriteNode()
+
+    private static let chewSteps: [CGFloat] = [0, 0.15, 0.3, 0.45, 0.6, 1]
+
+    var spec: StageSpec { Stages.all[stage] }
+    /// 進む向きへの頭の傾き（時計回りが正）
+    var tilt: CGFloat { max(-0.3, min(0.3, vx / 600)) }
+
+    init(stage: Int) {
+        self.stage = stage
+        super.init()
+        aura.zPosition = -10
+        aura.colorBlendFactor = 1
+        addChild(aura)
+        for (i, w) in wings.enumerated() {
+            w.zPosition = -5
+            w.xScale = i == 0 ? -1 : 1
+            addChild(w)
+        }
+        tailGlow.colorBlendFactor = 1
+        tailGlow.zPosition = 0.5
+        head.zPosition = 1
+        addChild(head)
+        refreshLooks()
+    }
+
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func setStage(_ newStage: Int) {
+        guard newStage != stage else { return }
+        stage = newStage
+        refreshLooks()
+    }
+
+    /// 位置を初期化する（くねりの履歴も消す）
+    func reset(x: CGFloat) {
+        currentX = x
+        trail = Array(repeating: x, count: 60)
+        vx = 0
+        wig = 0
+    }
+
+    /// 毎フレーム呼ぶ。x はこのノード自身の座標単位での横位置
+    func update(dt: CGFloat, x: CGFloat) {
+        if trail.isEmpty { reset(x: x) }
+        time += dt
+        openTime = max(0, openTime - dt)
+        if dt > 0 {
+            let raw = (x - currentX) / dt
+            vx += (raw - vx) * min(1, dt * 10)
+        }
+        currentX = x
+        let target = min(1, abs(vx) / 200)
+        wig += (target - wig) * min(1, dt * 6)
+        ph += dt * (3 + 15 * wig)
+        trail.insert(x, at: 0)
+        if trail.count > 60 { trail.removeLast(trail.count - 60) }
+        layout()
+    }
+
+    /// 節の位置。描画と当たり判定の両方で使う
+    func segments() -> [Segment] {
+        let P = spec
+        var list: [Segment] = []
+        for i in 1...P.segCount {
+            let fi = CGFloat(i)
+            let k = fi * 1.15
+            let amp = (1.6 + wig * 9) * min(1, 0.35 + fi * 0.3)
+            let lag = trail.isEmpty ? currentX : trail[min(59, i * 5)]
+            let dx = (lag - currentX) + sin(ph - k) * amp
+            let dy = P.headR * 0.5 + fi * P.segR * 1.25 + cos(ph - k) * (1 + wig * 2.6)
+            let r = P.segR * (1 - fi * 0.055) * (1 + sin(ph - k + 1.6) * wig * 0.08)
+            list.append(Segment(dx: dx, dy: dy, r: r))
+        }
+        return list
+    }
+
+    // MARK: - Private
+
+    private func refreshLooks() {
+        let P = spec
+        segNodes.forEach { $0.removeFromParent() }
+        segNodes = (0..<P.segCount).map { i in
+            let node = SKSpriteNode()
+            node.zPosition = -1 - CGFloat(i) * 0.1
+            addChild(node)
+            return node
+        }
+        tailGlow.removeFromParent()
+        if stage == 2, let last = segNodes.last {
+            last.addChild(tailGlow)
+            tailGlow.color = element?.color ?? UIColor(hex: 0xffd23f)
+            tailGlow.size = CGSize(width: P.segR * 1.4, height: P.segR * 1.4)
+        }
+        aura.isHidden = stage < 1
+        aura.color = element?.color ?? UIColor(hex: 0xfff6a8)
+        aura.size = CGSize(width: P.headR * 4.8, height: P.headR * 4.8)
+        let wingArt = Art.imoWing(element: element)
+        for w in wings {
+            w.isHidden = stage < 2
+            wingArt.apply(to: w)
+        }
+        layout()
+    }
+
+    private func layout() {
+        let P = spec
+        let segs = segments()
+        for (i, s) in segs.enumerated() {
+            let node = segNodes[i]
+            let leg = sin(ph * 1.6 - CGFloat(i) * 1.3) > 0 ? 0 : 1
+            Art.imoSegment(stage: stage, legFrame: leg).apply(to: node)
+            node.position = CGPoint(x: s.dx, y: -s.dy)
+            node.setScale(s.r / P.segR)
+        }
+        if stage >= 2, let first = segs.first {
+            let flap = 1 + sin(time * 12) * 0.12
+            for (i, w) in wings.enumerated() {
+                w.position = CGPoint(x: first.dx, y: -first.dy)
+                w.xScale = (i == 0 ? -1 : 1) * flap
+            }
+        }
+        let chewRaw: CGFloat = dizzy ? 0 : openTime > 0 ? 1 : (sin(time * 14) + 1) * 0.3
+        let chew = Self.chewSteps.min(by: { abs($0 - chewRaw) < abs($1 - chewRaw) }) ?? 0
+        Art.imoHead(stage: stage, chew: chew, dizzy: dizzy, element: element).apply(to: head)
+        head.zRotation = dizzy ? 0 : -tilt
+    }
+}
