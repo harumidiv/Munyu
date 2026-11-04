@@ -294,6 +294,27 @@ extension Art {
         }
     }
 
+    /// 中心が濃く、ふちが消えていく円（炎の粒など。色はスプライト側で付ける）
+    static var softDot: ArtTexture {
+        make("softDot", CGRect(x: -12, y: -12, width: 24, height: 24)) { c in
+            c.radial(C(0, 0, 12), [white(1), white(0.85), white(0)], [0, 0.4, 1], from: .zero, 0, to: .zero, 12)
+        }
+    }
+
+    /// 氷のつぶて（上向き）
+    static var iceShard: ArtTexture {
+        make("iceShard", CGRect(x: -12, y: -18, width: 24, height: 34)) { c in
+            let shard = shape { p in p.mv(0, -14); p.ln(6, 0); p.ln(0, 12); p.ln(-6, 0); p.closeSubpath() }
+            c.saveGState()
+            c.setShadow(offset: .zero, blur: 8, color: UIColor(hex: 0x5cc0ff).cgColor)
+            c.linear(shard, [UIColor(hex: 0xeafaff), UIColor(hex: 0x8fd8ff), UIColor(hex: 0x3a9be0)], [0, 0.5, 1],
+                     from: CGPoint(x: -6, y: -14), to: CGPoint(x: 6, y: 12))
+            c.restoreGState()
+            c.stroke(shard, 1.6, UIColor(hex: 0x1d5f99))
+            c.stroke(shape { p in p.mv(0, -10); p.ln(-2.5, 0) }, 1.4, white(0.9))
+        }
+    }
+
     static var dot: ArtTexture {
         make("dot", CGRect(x: -8, y: -8, width: 16, height: 16)) { c in c.fill(C(0, 0, 8), .white) }
     }
@@ -306,10 +327,21 @@ extension Art {
 // MARK: - 敵
 
 extension Art {
-    static func ant(_ frame: Int) -> ArtTexture {
-        make("ant\(frame)", CGRect(x: -22, y: -26, width: 44, height: 48)) { c in
+
+    /// やられた時の×目
+    private static func xEye(_ c: CGContext, _ x: CGFloat, _ y: CGFloat, _ r: CGFloat) {
+        c.stroke(shape { p in
+            p.mv(x - r, y - r); p.ln(x + r, y + r)
+            p.mv(x + r, y - r); p.ln(x - r, y + r)
+        }, 1.4)
+    }
+
+    static func ant(_ frame: Int, dead: Bool = false) -> ArtTexture {
+        make("ant\(frame)-\(dead)", CGRect(x: -22, y: -26, width: 44, height: 48)) { c in
             let lg: CGFloat = frame == 0 ? 3 : -3
             c.blob(2, 10, 13, 5)
+            // 体はこちら（画面下）向きに描く。影は向きを変えない
+            c.scaleBy(x: 1, y: -1)
             c.stroke(shape { p in
                 for s: CGFloat in [-1, 1] {
                     for i: CGFloat in [-1, 0, 1] {
@@ -326,17 +358,19 @@ extension Art {
             c.stroke(shape { p in p.mv(-3, -15); p.qd(-8, -22, -11, -21); p.mv(3, -15); p.qd(8, -22, 11, -21) }, 2)
             for s: CGFloat in [-1, 1] {
                 c.fill(C(s * 3.2, -9, 2.8), .white)
-                c.fill(C(s * 3, -8.4, 1.5), line)
+                if dead { xEye(c, s * 3.2, -9, 1.6) } else { c.fill(C(s * 3, -8.4, 1.5), line) }
             }
             c.stroke(shape { p in p.mv(-6, -13); p.ln(-1.5, -11.5); p.mv(6, -13); p.ln(1.5, -11.5) }, 1.8)
             c.fill(E(-3, 7, 3, 2, -0.5), white(0.35))
         }
     }
 
-    static func bee(_ frame: Int) -> ArtTexture {
-        make("bee\(frame)", CGRect(x: -26, y: -26, width: 52, height: 50)) { c in
+    static func bee(_ frame: Int, dead: Bool = false) -> ArtTexture {
+        make("bee\(frame)-\(dead)", CGRect(x: -26, y: -26, width: 52, height: 50)) { c in
             let w: CGFloat = frame == 0 ? 0.35 : -0.35
             c.blob(2, 16, 11, 4)
+            // 体はこちら（画面下）向きに描く。影は向きを変えない
+            c.scaleBy(x: 1, y: -1)
             for s: CGFloat in [-1, 1] {
                 c.saveGState()
                 c.scaleBy(x: s, y: 1)
@@ -356,15 +390,17 @@ extension Art {
             c.fill(shape { p in p.mv(-3, 14); p.ln(0, 21); p.ln(3, 14); p.closeSubpath() }, line)
             c.fs(C(0, -11, 7), UIColor(hex: 0xffd969))
             for s: CGFloat in [-1, 1] {
-                c.fill(C(s * 2.6, -11.5, 1.7), line)
+                if dead { xEye(c, s * 2.6, -11.5, 1.6) } else { c.fill(C(s * 2.6, -11.5, 1.7), line) }
                 c.fill(C(s * 4.6, -8.5, 1.6), UIColor(red: 1, green: 110 / 255, blue: 120 / 255, alpha: 0.6))
             }
         }
     }
 
-    static func lady(_ frame: Int) -> ArtTexture {
-        make("lady\(frame)", CGRect(x: -28, y: -28, width: 56, height: 56)) { c in
+    static func lady(_ frame: Int, dead: Bool = false) -> ArtTexture {
+        make("lady\(frame)-\(dead)", CGRect(x: -28, y: -28, width: 56, height: 56)) { c in
             c.blob(2, 18, 18, 6)
+            // 体はこちら（画面下）向きに描く。影は向きを変えない
+            c.scaleBy(x: 1, y: -1)
             let d: CGFloat = frame == 0 ? 1.5 : -1.5
             for s: CGFloat in [-1, 1] {
                 for i: CGFloat in [-1, 0, 1] {
@@ -372,8 +408,9 @@ extension Art {
                 }
             }
             c.fs(C(0, -15, 9), UIColor(hex: 0x2f2a2a))
-            c.fill(C(-3.6, -17, 2.4), .white)
-            c.fill(C(3.6, -17, 2.4), .white)
+            for s: CGFloat in [-1, 1] {
+                if dead { xEye(c, s * 3.6, -17, 1.8) } else { c.fill(C(s * 3.6, -17, 2.4), .white) }
+            }
             let shell = C(0, 0, 18)
             c.radial(shell, [UIColor(hex: 0xff6a55), UIColor(hex: 0xd8261d)], [0, 1], from: CGPoint(x: -6, y: -6), 2, to: .zero, 19)
             c.stroke(shell, 2.8)
@@ -435,6 +472,15 @@ extension Art {
             c.fill(C(-3.5, -1, 1.8), line)
             c.fill(C(3.5, -1, 1.8), line)
             c.stroke(shape { p in p.mv(-6, -5); p.ln(-1.5, -3); p.mv(6, -5); p.ln(1.5, -3) }, 1.6)
+        }
+    }
+
+    /// ハチの針（先が上）
+    static var stinger: ArtTexture {
+        make("stinger", CGRect(x: -6, y: -13, width: 12, height: 26)) { c in
+            let needle = shape { p in p.mv(0, -11); p.ln(2.4, 4); p.qd(0, 7, -2.4, 4); p.closeSubpath() }
+            c.fs(needle, UIColor(hex: 0x3a2e1a), 1.2)
+            c.fs(E(0, 6.5, 3, 2.4), UIColor(hex: 0xffc93c), 1.2)
         }
     }
 

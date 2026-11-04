@@ -58,6 +58,15 @@ enum Element: String, CaseIterable {
         }
     }
 
+    /// 属性攻撃の間隔(秒)
+    var interval: CGFloat {
+        switch self {
+        case .fire: return 2.0
+        case .ice: return 1.6
+        case .thunder: return 1.4
+        }
+    }
+
     var color: UIColor {
         switch self {
         case .fire: return UIColor(hex: 0xff7a2e)
@@ -90,9 +99,9 @@ enum GateOption: Equatable {
         case .shot: return "まっすぐ"
         case .power: return "+1"
         case .hp: return "回復"
-        case .magic(.fire): return "貫通"
-        case .magic(.ice): return "足止め"
-        case .magic(.thunder): return "連鎖"
+        case .magic(.fire): return "炎を吐く"
+        case .magic(.ice): return "氷のつぶて"
+        case .magic(.thunder): return "落雷"
         }
     }
 

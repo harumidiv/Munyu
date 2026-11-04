@@ -32,6 +32,11 @@ private final class Foe {
     var hit: CGFloat = 0
     var gone = false
     var counted = false
+    /// ハチ用：止まる高さ・止まっている時間・次の針までの時間・帰るところか
+    var hoverY = CGFloat.random(in: 110...290)
+    var hoverTime: CGFloat = 0
+    var stingTimer = CGFloat.random(in: 0.6...1.2)
+    var leaving = false
     let node = SKSpriteNode()
     let hpBack = SKSpriteNode(color: Art.cream, size: CGSize(width: 30, height: 6))
     let hpFill = SKSpriteNode(color: UIColor(hex: 0xff5a47), size: CGSize(width: 28, height: 4))
@@ -81,15 +86,20 @@ private final class EnemyShot {
     var x: CGFloat, y: CGFloat
     let vx: CGFloat, vy: CGFloat
     var dead = false
-    let node = Art.feather.sprite()
+    let node: SKSpriteNode
+    /// 当たった時に出す文字
+    let label: String
 
-    init(x: CGFloat, y: CGFloat, vx: CGFloat, vy: CGFloat) {
+    init(x: CGFloat, y: CGFloat, vx: CGFloat, vy: CGFloat, art: ArtTexture = Art.feather, label: String = "羽根") {
         self.x = x; self.y = y; self.vx = vx; self.vy = vy
+        self.node = art.sprite()
+        self.label = label
         node.zRotation = -(atan2(vy, vx) + .pi / 2)
     }
 }
 
-private enum ItemKind { case kinoko, berry, iga }
+/// bug は倒した虫（食べられる）
+private enum ItemKind { case kinoko, berry, iga, bug }
 
 private final class Item {
     let kind: ItemKind
@@ -97,13 +107,23 @@ private final class Item {
     var dead = false
     let node = SKNode()
     let art: SKSpriteNode
+    let foe: FoeKind
+    /// 倒れた虫の傾き
+    let tilt = CGFloat.random(in: -0.5...0.5)
 
-    init(kind: ItemKind, x: CGFloat, y: CGFloat) {
-        self.kind = kind; self.x = x; self.y = y
+    init(kind: ItemKind, x: CGFloat, y: CGFloat, foe: FoeKind = .ant) {
+        self.kind = kind; self.x = x; self.y = y; self.foe = foe
         switch kind {
         case .kinoko: art = Art.kinoko.sprite()
         case .berry: art = Art.berry.sprite()
         case .iga: art = Art.igaBall.sprite()
+        case .bug:
+            switch foe {
+            case .ant: art = Art.ant(0, dead: true).sprite()
+            case .bee: art = Art.bee(0, dead: true).sprite()
+            case .lady: art = Art.lady(0, dead: true).sprite()
+            }
+            art.setScale(0.85)
         }
         if kind == .iga {
             let shadow = Art.shadow(rx: 13, ry: 4).sprite()
@@ -117,7 +137,9 @@ private final class Item {
         node.addChild(art)
     }
 
-    var radius: CGFloat { kind == .iga ? 12 : 11 }
+    var radius: CGFloat { kind == .iga || kind == .bug ? 12 : 11 }
+    /// 食べた時に増える進化ゲージ
+    var xp: Int { kind == .bug && foe == .lady ? 2 : 1 }
 }
 
 private final class Gate {
@@ -246,10 +268,13 @@ class GameScene: SKScene {
     private var element: Element?
     private var cooldown: CGFloat = 0
     private var magicCooldown: CGFloat = 2
+    private var elementCooldown: CGFloat = 0
+    private var flameTime: CGFloat = 0
     private var invincible: CGFloat = 0
     private var bodyCircles: [Circle] = []
     private var mouth = Circle(x: 0, y: 0, r: 0)
     private var accelX: CGFloat = 0
+    private let tiltGain: CGFloat = 1.6
     private var dragStart: (x: CGFloat, tx: CGFloat)?
 
     // 物
@@ -345,7 +370,7 @@ class GameScene: SKScene {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let start = dragStart, let p = touches.first?.location(in: self) else { return }
-        tx = clamp(start.tx + (p.x / k - start.x) * 1.3, 22, W - 22)
+        tx = clamp(start.tx + (p.x / k - start.x) * 1.6, 22, W - 22)
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { dragStart = nil }
@@ -365,9 +390,9 @@ class GameScene: SKScene {
             dt *= 0.3
         }
 
-        // 傾き（元の操作と同じく 60fps 換算で1フレームに accelX 動く）
-        tx = clamp(tx + accelX / k * dt * 60, 22, W - 22)
-        px += (tx - px) * min(1, dt * 12)
+        // 傾きは元の1.6倍の速さで動かし、目標位置にもすばやく追いつく
+        tx = clamp(tx + accelX * tiltGain / k * dt * 60, 22, W - 22)
+        px += (tx - px) * min(1, dt * 22)
         invincible = max(0, invincible - dt)
         imo.update(dt: dt, x: px)
         updateHitbox()
@@ -390,6 +415,12 @@ class GameScene: SKScene {
             magicCooldown -= dt
             if magicCooldown <= 0 { magic(); magicCooldown = 2 }
         }
+        // 属性攻撃（進化段階に関係なく、属性を取ったら撃つ）
+        if let e = element {
+            elementCooldown -= dt
+            if elementCooldown <= 0 { elementCooldown = castElement(e) ? e.interval : 0.3 }
+        }
+        if flameTime > 0 { updateFlame(dt) }
         for s in shots { s.x += s.vx * dt; s.y += s.vy * dt }
 
         updateFoes(dt, groundV: groundV)
@@ -429,10 +460,14 @@ class GameScene: SKScene {
             f.slow -= dt
             f.hit -= dt
             f.t += dt * sl
-            if f.kind == .bee { f.ph += dt * 3; f.x += cos(f.ph) * 70 * dt }
             if f.kind == .lady { f.x += (px - f.x) * 0.25 * dt }
+            if f.kind == .bee {
+                updateBee(f, dt, sl)
+            } else {
+                // 地面の流れより速く、こちらに向かって歩いてくる
+                f.y += (groundV > 0 ? groundV + f.vy * 0.5 * sl : f.vy * sl) * dt
+            }
             f.x = clamp(f.x, 40, W - 40)
-            f.y += (f.vy + groundV * 0.25) * sl * dt
 
             for s in shots where !s.dead && !s.hitFoes.contains(ObjectIdentifier(f)) {
                 if dist2(s.x, s.y, f.x, f.y) < pow2(s.r + f.r) {
@@ -464,7 +499,7 @@ class GameScene: SKScene {
             puff(f.x, f.y)
             let col: UIColor = f.kind == .lady ? UIColor(hex: 0xff5a47) : f.kind == .bee ? UIColor(hex: 0xffd23f) : UIColor(hex: 0x8a5a3c)
             burst(f.x, f.y, col, 8)
-            if CGFloat.random(in: 0..<1) < 0.18 { addItem(.kinoko, x: f.x, y: f.y) }
+            addItem(.bug, x: f.x, y: f.y, foe: f.kind)
         }
         foes.removeAll { f in
             if f.hp <= 0 { f.node.removeFromParent() }
@@ -476,7 +511,7 @@ class GameScene: SKScene {
         let hr = Stages.all[stage].headR
         for it in items {
             it.y += (groundV > 0 ? groundV : 40) * dt
-            let edible = it.kind == .kinoko || (it.kind == .berry && stage >= 1)
+            let edible = it.kind == .kinoko || it.kind == .bug || (it.kind == .berry && stage >= 1)
             let eat = edible && (dist2(it.x, it.y, mouth.x, mouth.y) < pow2(mouth.r + it.radius)
                                  || dist2(it.x, it.y, px, py) < pow2(hr * 0.7 + it.radius))
             let bump = it.kind == .iga && !isInvincible && hitBody(it.x, it.y, it.radius)
@@ -500,6 +535,12 @@ class GameScene: SKScene {
             case .iga:
                 burst(it.x, it.y, UIColor(hex: 0xb07a3c), 12)
                 hurt("イガグリ")
+            case .bug:
+                burst(mouth.x, mouth.y, UIColor(hex: 0xffe0b0), 8)
+                pop("+\(it.xp)", it.x, it.y - 10, UIColor(hex: 0xfff6a8))
+                imo.openTime = 0.25
+                presenter.playItemsound()
+                gainXp(it.xp)
             }
         }
         items.removeAll { it in
@@ -593,7 +634,7 @@ class GameScene: SKScene {
             e.y += e.vy * dt
             if !isInvincible && hitBody(e.x, e.y, 4.5) {
                 e.dead = true
-                hurt("羽根")
+                hurt(e.label)
             }
         }
         enemyShots.removeAll { e in
@@ -649,10 +690,35 @@ class GameScene: SKScene {
         return f
     }
 
-    private func addItem(_ kind: ItemKind, x: CGFloat, y: CGFloat) {
-        let it = Item(kind: kind, x: x, y: y)
+    private func addItem(_ kind: ItemKind, x: CGFloat, y: CGFloat, foe: FoeKind = .ant) {
+        let it = Item(kind: kind, x: x, y: y, foe: foe)
         items.append(it)
         itemLayer.addChild(it.node)
+    }
+
+    /// ハチ：上の方で止まって、芋虫めがけて針を撃つ。しばらくしたら上へ帰る
+    private func updateBee(_ f: Foe, _ dt: CGFloat, _ sl: CGFloat) {
+        f.ph += dt * 3
+        let stopY = f.hoverY + topInset
+        if f.leaving {
+            f.y -= 170 * dt
+            if f.y < -40 { f.hp = 0; f.gone = true }
+        } else if f.y < stopY {
+            f.y = min(stopY, f.y + 150 * sl * dt)
+        } else {
+            f.hoverTime += dt
+            f.x += cos(f.ph) * 35 * dt
+            f.y = stopY + sin(f.ph * 1.3) * 4
+            f.stingTimer -= dt * sl
+            if f.stingTimer <= 0 {
+                let a = atan2(py - f.y, px - f.x)
+                let e = EnemyShot(x: f.x, y: f.y + 14, vx: cos(a) * 210, vy: sin(a) * 210, art: Art.stinger, label: "針")
+                enemyShots.append(e)
+                shotLayer.addChild(e.node)
+                f.stingTimer = 1.8
+            }
+            if f.hoverTime > 7 { f.leaving = true }
+        }
     }
 
     private func addEnemyShot(_ x: CGFloat, _ y: CGFloat, _ vx: CGFloat, _ vy: CGFloat) {
@@ -740,14 +806,143 @@ class GameScene: SKScene {
         imo.openTime = 0.12
         for i in 0..<n {
             let off = CGFloat(i) - CGFloat(n - 1) / 2
-            let node = Art.leafShot(element: element, r: r).sprite()
+            let node = Art.leafShot(element: nil, r: r).sprite()
             node.zRotation = -off * 0.07
-            let dmg = power * (element == .fire ? 1.5 : 1)
+            let dmg = power
             let s = Shot(x: px + off * spacing, y: py - hr, vx: off * 28, vy: -430, dmg: dmg,
-                         element: element, pierce: element == .fire ? 1 : 0, r: r, node: node)
+                         element: nil, pierce: 0, r: r, node: node)
             shots.append(s)
             shotLayer.addChild(node)
         }
+    }
+
+    // MARK: - Element attacks
+
+    /// 属性攻撃を出す。撃てる相手がいなければ false
+    private func castElement(_ e: Element) -> Bool {
+        switch e {
+        case .thunder: return castThunder()
+        case .fire:
+            flameTime = 0.6
+            return true
+        case .ice:
+            castIce()
+            return true
+        }
+    }
+
+    /// 雷：前方でいちばん近い敵に落雷し、近くの敵に2回まで連鎖する
+    private func castThunder() -> Bool {
+        let dmg = 4 * power
+        let ahead = foes.filter { $0.hp > 0 && $0.y < py && $0.y > topInset }
+        if let target = ahead.min(by: { dist2($0.x, $0.y, mouth.x, mouth.y) < dist2($1.x, $1.y, mouth.x, mouth.y) }) {
+            imo.openTime = 0.25
+            bolt(from: CGPoint(x: mouth.x, y: mouth.y), to: CGPoint(x: target.x, y: target.y), width: 6)
+            damage(target, dmg, nil, at: CGPoint(x: target.x, y: target.y))
+            var hit: Set<ObjectIdentifier> = [ObjectIdentifier(target)]
+            var from = target
+            for _ in 0..<2 {
+                let next = foes.filter { $0.hp > 0 && !hit.contains(ObjectIdentifier($0)) && dist2($0.x, $0.y, from.x, from.y) < 110 * 110 }
+                    .min { dist2($0.x, $0.y, from.x, from.y) < dist2($1.x, $1.y, from.x, from.y) }
+                guard let n = next else { break }
+                bolt(from: CGPoint(x: from.x, y: from.y), to: CGPoint(x: n.x, y: n.y), width: 4)
+                damage(n, dmg * 0.6, nil, at: CGPoint(x: n.x, y: n.y))
+                hit.insert(ObjectIdentifier(n))
+                from = n
+            }
+            return true
+        }
+        if let b = boss, b.y > topInset + 60 {
+            imo.openTime = 0.25
+            bolt(from: CGPoint(x: mouth.x, y: mouth.y), to: CGPoint(x: b.x, y: b.y + 10), width: 7)
+            b.hp -= dmg * 1.5
+            b.hit = 0.1
+            return true
+        }
+        return false
+    }
+
+    /// 炎：唇から前に炎を吐く。扇形の中の敵に毎フレームダメージ
+    private func updateFlame(_ dt: CGFloat) {
+        flameTime -= dt
+        imo.openTime = 0.1
+        let range: CGFloat = 170, spread: CGFloat = 0.42
+        for i in 0..<6 {
+            let a = -CGFloat.pi / 2 + CGFloat.random(in: -spread...spread) * 0.85
+            let speed = CGFloat.random(in: 320...400), life = TimeInterval.random(in: 0.38...0.5)
+            let node = Art.softDot.sprite()
+            node.colorBlendFactor = 1
+            // 芯は白っぽい黄色、外側はオレンジ〜赤
+            node.color = i < 2 ? UIColor(hex: 0xfff3b0) : UIColor(hex: 0xffb21e)
+            node.blendMode = i < 2 ? .add : .alpha
+            node.alpha = i < 2 ? 0.7 : 0.9
+            node.setScale(0.9)
+            node.position = P(mouth.x, mouth.y - 4)
+            fxLayer.addChild(node)
+            let move = SKAction.moveBy(x: cos(a) * speed * CGFloat(life), y: -sin(a) * speed * CGFloat(life), duration: life)
+            move.timingMode = .easeOut
+            let tint = SKAction.colorize(with: UIColor(hex: 0xff3a10), colorBlendFactor: 1, duration: life)
+            let fade = SKAction.sequence([.wait(forDuration: life * 0.5), .fadeOut(withDuration: life * 0.5)])
+            node.run(.sequence([.group([move, tint, .scale(to: CGFloat.random(in: 2.6...3.4), duration: life), fade]), .removeFromParent()]))
+        }
+        let dps = 12 * power
+        func inCone(_ x: CGFloat, _ y: CGFloat, _ r: CGFloat) -> Bool {
+            let dx = x - mouth.x, dy = mouth.y - y
+            guard dy > -r, dx * dx + dy * dy < pow2(range + r) else { return false }
+            return abs(atan2(dx, max(dy, 1))) < spread + 0.1
+        }
+        for f in foes where f.hp > 0 && inCone(f.x, f.y, f.r) {
+            f.hp -= dps * dt
+            f.hit = 0.05
+            if CGFloat.random(in: 0..<1) < 0.15 { burst(f.x, f.y, UIColor(hex: 0xff7a2e), 2) }
+        }
+        if let b = boss, b.parts.contains(where: { inCone($0.x, $0.y, $0.r) }) {
+            b.hp -= dps * dt
+            b.hit = 0.05
+        }
+    }
+
+    /// 氷：5本の氷のつぶてを扇形に飛ばす。当たった敵は遅くなる
+    private func castIce() {
+        imo.openTime = 0.2
+        for i in 0..<5 {
+            let a = -CGFloat.pi / 2 + (CGFloat(i) - 2) * 0.22
+            let node = Art.iceShard.sprite()
+            node.zRotation = -(a + .pi / 2)
+            let s = Shot(x: mouth.x, y: mouth.y, vx: cos(a) * 380, vy: sin(a) * 380, dmg: 2 * power,
+                         element: .ice, pierce: 0, r: 7, node: node)
+            shots.append(s)
+            shotLayer.addChild(node)
+        }
+    }
+
+    /// ギザギザの稲妻
+    private func bolt(from a: CGPoint, to b: CGPoint, width: CGFloat) {
+        let path = CGMutablePath()
+        path.move(to: P(a.x, a.y))
+        let steps = 6
+        for i in 1..<steps {
+            let p = CGFloat(i) / CGFloat(steps)
+            let jitter = CGFloat.random(in: -12...12)
+            let nx = -(b.y - a.y), ny = b.x - a.x
+            let len = max(1, sqrt(nx * nx + ny * ny))
+            path.addLine(to: P(a.x + (b.x - a.x) * p + nx / len * jitter, a.y + (b.y - a.y) * p + ny / len * jitter))
+        }
+        path.addLine(to: P(b.x, b.y))
+        let glow = SKShapeNode(path: path)
+        glow.strokeColor = UIColor(hex: 0xffe13a)
+        glow.lineWidth = width
+        glow.lineJoin = .round
+        glow.glowWidth = width * 0.8
+        let core = SKShapeNode(path: path)
+        core.strokeColor = .white
+        core.lineWidth = width * 0.35
+        core.lineJoin = .round
+        glow.addChild(core)
+        fxLayer.addChild(glow)
+        glow.run(.sequence([.wait(forDuration: 0.12), .fadeOut(withDuration: 0.2), .removeFromParent()]))
+        burst(b.x, b.y, UIColor(hex: 0xffe13a), 6)
+        ring(b.x, b.y, UIColor(hex: 0xfff6a8), 30, 0.25)
     }
 
     private func magic() {
@@ -836,6 +1031,7 @@ class GameScene: SKScene {
                 it.art.position = CGPoint(x: 0, y: -sin(t * 4 + it.x) * 1.5)
                 it.art.setScale(1 + sin(t * 6) * 0.05)
             case .iga: it.art.zRotation = -(t * 1.2 + it.x)
+            case .bug: it.art.zRotation = it.tilt + sin(t * 9 + it.x) * 0.08
             }
         }
         for g in gates { g.node.position = P(0, g.y) }
@@ -961,7 +1157,7 @@ class GameScene: SKScene {
             xpFill.isHidden = true
         }
         let rate = String(format: "%.1f", 1 / fireRate)
-        statLabel.text = stage >= 1 ? "弾 \(shotCount)   攻 \(Int(power))   連射 \(rate)/s" : "攻撃なし・キノコを食べよう"
+        statLabel.text = stage >= 1 ? "弾 \(shotCount)   攻 \(Int(power))   連射 \(rate)/s" : (element.map { "\($0.name)の魔法だけ・キノコを食べよう" } ?? "攻撃なし・キノコを食べよう")
         defenseLine.isHidden = stage < 1
     }
 
