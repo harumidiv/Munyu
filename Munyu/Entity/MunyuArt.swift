@@ -509,6 +509,33 @@ extension Art {
         }
     }
 
+    /// 追尾弾：ピンクの種
+    static var seedShot: ArtTexture {
+        make("seedShot", CGRect(x: -12, y: -14, width: 24, height: 28)) { c in
+            let col = UIColor(hex: 0xff7fc8)
+            let seed = E(0, 1, 6, 8)
+            c.saveGState()
+            c.setShadow(offset: .zero, blur: 7, color: col.cgColor)
+            c.radial(seed, [UIColor(hex: 0xffe3f3), col], [0, 1], from: CGPoint(x: -2, y: -2), 0.5, to: .zero, 8)
+            c.restoreGState()
+            c.stroke(seed, 1.6)
+            c.fs(shape { p in p.mv(0, -7); p.qd(5, -13, 9, -10); p.qd(4, -7, 0, -7); p.closeSubpath() }, UIColor(hex: 0x6ccf4a), 1.4)
+        }
+    }
+
+    /// 貫通弾：細長い草の刃
+    static var bladeShot: ArtTexture {
+        make("bladeShot", CGRect(x: -8, y: -20, width: 16, height: 38)) { c in
+            let blade = shape { p in p.mv(0, -18); p.qd(5, -2, 2, 16); p.ln(-2, 16); p.qd(-5, -2, 0, -18); p.closeSubpath() }
+            c.saveGState()
+            c.setShadow(offset: .zero, blur: 6, color: UIColor(hex: 0xd8ff7a).cgColor)
+            c.linear(blade, [UIColor(hex: 0xf2ffb8), UIColor(hex: 0x8fd14f)], [0, 1], from: CGPoint(x: 0, y: -18), to: CGPoint(x: 0, y: 16))
+            c.restoreGState()
+            c.stroke(blade, 1.6)
+            c.stroke(shape { p in p.mv(0, -13); p.ln(0, 13) }, 1.1, white(0.8))
+        }
+    }
+
     /// Lv3の大きな魔法弾
     static func orb(element: Element?) -> ArtTexture {
         let col = element?.color ?? UIColor(hex: 0x9be35a)

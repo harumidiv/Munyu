@@ -67,9 +67,13 @@ private final class Foe {
 
 private final class Shot {
     var x: CGFloat, y: CGFloat
-    let vx: CGFloat, vy: CGFloat
+    var vx: CGFloat, vy: CGFloat
     let dmg: CGFloat
     let element: Element?
+    /// 敵を追いかける弾か
+    var homing = false
+    /// 追尾弾がいつまでも回り続けないための寿命
+    var life: CGFloat = 3
     var pierce: Int
     let r: CGFloat
     var hitFoes = Set<ObjectIdentifier>()
@@ -262,8 +266,9 @@ class GameScene: SKScene {
     private var maxHp = 5
     private var xp = 0
     private var stage = 0
-    private var fireRate: CGFloat = 0.42
+    private var fireRate: CGFloat = 0.25
     private var shotCount = 1
+    private var shotType: ShotType = .leaf
     private var power: CGFloat = 1
     private var element: Element?
     private var cooldown: CGFloat = 0
@@ -413,7 +418,7 @@ class GameScene: SKScene {
         }
         if stage >= 2 {
             magicCooldown -= dt
-            if magicCooldown <= 0 { magic(); magicCooldown = 2 }
+            if magicCooldown <= 0 { magic(); magicCooldown = 1.5 }
         }
         // 属性攻撃（進化段階に関係なく、属性を取ったら撃つ）
         if let e = element {
@@ -421,7 +426,12 @@ class GameScene: SKScene {
             if elementCooldown <= 0 { elementCooldown = castElement(e) ? e.interval : 0.3 }
         }
         if flameTime > 0 { updateFlame(dt) }
-        for s in shots { s.x += s.vx * dt; s.y += s.vy * dt }
+        for s in shots {
+            if s.homing { steer(s, dt) }
+            s.life -= dt
+            s.x += s.vx * dt
+            s.y += s.vy * dt
+        }
 
         updateFoes(dt, groundV: groundV)
         updateItems(dt, groundV: groundV)
@@ -430,7 +440,7 @@ class GameScene: SKScene {
         updateEnemyShots(dt)
 
         shots.removeAll { s in
-            let out = s.dead || s.y < -30 || s.x < -20 || s.x > W + 20
+            let out = s.dead || s.life <= 0 || s.y < -30 || s.y > H + 30 || s.x < -20 || s.x > W + 20
             if out { s.node.removeFromParent() }
             return out
         }
@@ -442,10 +452,10 @@ class GameScene: SKScene {
         spawnFoeTimer -= dt * rate
         if spawnFoeTimer <= 0 { _ = spawnFoe(); spawnFoeTimer = .random(in: 1.0...1.8) }
         spawnKinokoTimer -= dt
-        if spawnKinokoTimer <= 0 { addItem(.kinoko, x: .random(in: 56...(W - 56)), y: -20); spawnKinokoTimer = .random(in: 1.2...2.2) }
+        if spawnKinokoTimer <= 0 { addItem(.kinoko, x: .random(in: 56...(W - 56)), y: -20); spawnKinokoTimer = .random(in: 0.8...1.5) }
         if stage >= 1 {
             spawnBerryTimer -= dt
-            if spawnBerryTimer <= 0 { addItem(.berry, x: .random(in: 56...(W - 56)), y: -20); spawnBerryTimer = .random(in: 9...14) }
+            if spawnBerryTimer <= 0 { addItem(.berry, x: .random(in: 56...(W - 56)), y: -20); spawnBerryTimer = .random(in: 7...11) }
         }
         spawnIgaTimer -= dt
         if spawnIgaTimer <= 0 { addItem(.iga, x: .random(in: 56...(W - 56)), y: -20); spawnIgaTimer = .random(in: 2.5...4.5) }
@@ -735,6 +745,11 @@ class GameScene: SKScene {
             b = .magic(.thunder)
         } else {
             if let e = element { pool.removeAll { $0 == .magic(e) } }
+            pool.removeAll { $0 == .bullet(shotType) }
+            if gateIndex == 1 {
+                // 2つ目のゲートは弾の種類どうしで選ぶ
+                pool = pool.filter { if case .bullet = $0 { return true } else { return false } }
+            }
             a = pool.remove(at: Int.random(in: 0..<pool.count))
             if a.element != nil { pool.removeAll { $0.element != nil } }
             b = pool.randomElement() ?? .hp
@@ -751,6 +766,7 @@ class GameScene: SKScene {
         case .rate: fireRate *= 0.8
         case .shot: shotCount = min(shotCount + 1, 5)
         case .power: power += 1
+        case .bullet(let s): shotType = s
         case .hp:
             maxHp += 1
             hp = min(maxHp, hp + 2)
@@ -800,20 +816,74 @@ class GameScene: SKScene {
     }
 
     private func fire() {
-        let n = shotCount, spacing: CGFloat = 12
-        let hr = Stages.all[stage].headR
+        let n = shotCount
         let r = 5 + CGFloat(stage)
         imo.openTime = 0.12
-        for i in 0..<n {
-            let off = CGFloat(i) - CGFloat(n - 1) / 2
-            let node = Art.leafShot(element: nil, r: r).sprite()
-            node.zRotation = -off * 0.07
-            let dmg = power
-            let s = Shot(x: px + off * spacing, y: py - hr, vx: off * 28, vy: -430, dmg: dmg,
-                         element: nil, pierce: 0, r: r, node: node)
-            shots.append(s)
-            shotLayer.addChild(node)
+        switch shotType {
+        case .leaf:
+            for i in 0..<n {
+                let off = CGFloat(i) - CGFloat(n - 1) / 2
+                addPlayerShot(dx: off * 12, angle: off * 0.065, speed: 480, dmg: power, pierce: 0, r: r,
+                              art: Art.leafShot(element: nil, r: r))
+            }
+        case .spread:
+            // 弾数+2本を扇形に。1本ずつは少し弱い
+            let m = n + 2
+            for i in 0..<m {
+                let off = CGFloat(i) - CGFloat(m - 1) / 2
+                let a = off * (0.9 / CGFloat(m - 1))
+                addPlayerShot(dx: off * 4, angle: a, speed: 440, dmg: power * 0.7, pierce: 0, r: r - 1,
+                              art: Art.leafShot(element: nil, r: r - 1))
+            }
+        case .homing:
+            for i in 0..<n {
+                let off = CGFloat(i) - CGFloat(n - 1) / 2
+                let s = addPlayerShot(dx: off * 10, angle: off * 0.35, speed: 380, dmg: power * 0.8, pierce: 0, r: 7,
+                                      art: Art.seedShot)
+                s.homing = true
+            }
+        case .pierce:
+            for i in 0..<n {
+                let off = CGFloat(i) - CGFloat(n - 1) / 2
+                addPlayerShot(dx: off * 10, angle: 0, speed: 620, dmg: power * 1.2, pierce: 3, r: 6,
+                              art: Art.bladeShot)
+            }
         }
+    }
+
+    /// 自分の弾を出す。angle は真上からのずれ（右が正）
+    @discardableResult
+    private func addPlayerShot(dx: CGFloat, angle: CGFloat, speed: CGFloat, dmg: CGFloat, pierce: Int, r: CGFloat, art: ArtTexture) -> Shot {
+        let hr = Stages.all[stage].headR
+        let a = -CGFloat.pi / 2 + angle
+        let node = art.sprite()
+        node.zRotation = -angle
+        let s = Shot(x: px + dx, y: py - hr, vx: cos(a) * speed, vy: sin(a) * speed, dmg: dmg,
+                     element: nil, pierce: pierce, r: r, node: node)
+        shots.append(s)
+        shotLayer.addChild(node)
+        return s
+    }
+
+    /// 追尾弾をいちばん近い敵（いなければボス）へ曲げる
+    private func steer(_ s: Shot, _ dt: CGFloat) {
+        var target: CGPoint?
+        if let f = foes.filter({ $0.hp > 0 && $0.y < s.y + 40 })
+            .min(by: { dist2($0.x, $0.y, s.x, s.y) < dist2($1.x, $1.y, s.x, s.y) }) {
+            target = CGPoint(x: f.x, y: f.y)
+        } else if let b = boss {
+            target = CGPoint(x: b.x, y: b.y)
+        }
+        guard let tgt = target else { return }
+        let speed = sqrt(s.vx * s.vx + s.vy * s.vy)
+        let cur = atan2(s.vy, s.vx)
+        var diff = atan2(tgt.y - s.y, tgt.x - s.x) - cur
+        while diff > .pi { diff -= .pi * 2 }
+        while diff < -.pi { diff += .pi * 2 }
+        let next = cur + clamp(diff, -7 * dt, 7 * dt)
+        s.vx = cos(next) * speed
+        s.vy = sin(next) * speed
+        s.node.zRotation = -(next + .pi / 2)
     }
 
     // MARK: - Element attacks
@@ -1117,7 +1187,7 @@ class GameScene: SKScene {
         hudLayer.addChild(bossBar)
 
         let bottomY = H - bottomInset - 34
-        hudLayer.addChild(panel(CGRect(x: 10, y: bottomY, width: 170, height: 24), radius: 12, alpha: 0.88, stroke: false))
+        hudLayer.addChild(panel(CGRect(x: 10, y: bottomY, width: 210, height: 24), radius: 12, alpha: 0.88, stroke: false))
         statLabel.position = P(22, bottomY + 16)
         hudLayer.addChild(statLabel)
     }
@@ -1157,7 +1227,7 @@ class GameScene: SKScene {
             xpFill.isHidden = true
         }
         let rate = String(format: "%.1f", 1 / fireRate)
-        statLabel.text = stage >= 1 ? "弾 \(shotCount)   攻 \(Int(power))   連射 \(rate)/s" : (element.map { "\($0.name)の魔法だけ・キノコを食べよう" } ?? "攻撃なし・キノコを食べよう")
+        statLabel.text = stage >= 1 ? "\(shotType.name) \(shotCount)   攻 \(Int(power))   連射 \(rate)/s" : (element.map { "\($0.name)の魔法だけ・キノコを食べよう" } ?? "攻撃なし・キノコを食べよう")
         defenseLine.isHidden = stage < 1
     }
 
