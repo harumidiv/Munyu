@@ -368,9 +368,8 @@ extension Art {
     static func bee(_ frame: Int, dead: Bool = false) -> ArtTexture {
         make("bee\(frame)-\(dead)", CGRect(x: -26, y: -26, width: 52, height: 50)) { c in
             let w: CGFloat = frame == 0 ? 0.35 : -0.35
+            // ハチはお尻の針がこちら（画面下）を向くよう、元の向きのまま描く
             c.blob(2, 16, 11, 4)
-            // 体はこちら（画面下）向きに描く。影は向きを変えない
-            c.scaleBy(x: 1, y: -1)
             for s: CGFloat in [-1, 1] {
                 c.saveGState()
                 c.scaleBy(x: s, y: 1)

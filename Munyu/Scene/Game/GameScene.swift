@@ -438,9 +438,9 @@ class GameScene: SKScene {
     }
 
     private func spawn(_ dt: CGFloat) {
-        let rate = (1 + dist / 900) * difficulty.spawnRate
+        let rate = (1 + dist / 1400) * difficulty.spawnRate
         spawnFoeTimer -= dt * rate
-        if spawnFoeTimer <= 0 { _ = spawnFoe(); spawnFoeTimer = .random(in: 0.7...1.4) }
+        if spawnFoeTimer <= 0 { _ = spawnFoe(); spawnFoeTimer = .random(in: 1.0...1.8) }
         spawnKinokoTimer -= dt
         if spawnKinokoTimer <= 0 { addItem(.kinoko, x: .random(in: 56...(W - 56)), y: -20); spawnKinokoTimer = .random(in: 1.2...2.2) }
         if stage >= 1 {
@@ -679,7 +679,7 @@ class GameScene: SKScene {
         let f: Foe
         if d > 500 && r < 0.22 {
             f = Foe(kind: .lady, hp: (9 + d / 120) * mul, r: 19, vy: 34)
-        } else if d > 250 && r < 0.5 {
+        } else if d > 250 && r < 0.38 && foes.filter({ $0.kind == .bee && !$0.leaving }).count < 3 {
             f = Foe(kind: .bee, hp: (4 + d / 200) * mul, r: 14, vy: 62)
         } else {
             f = Foe(kind: .ant, hp: (2.5 + d / 180) * mul, r: 14, vy: 48)
@@ -717,7 +717,7 @@ class GameScene: SKScene {
                 shotLayer.addChild(e.node)
                 f.stingTimer = 1.8
             }
-            if f.hoverTime > 7 { f.leaving = true }
+            if f.hoverTime > 5 { f.leaving = true }
         }
     }
 
