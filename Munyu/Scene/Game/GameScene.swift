@@ -513,6 +513,15 @@ class GameScene: SKScene {
     private let damageFeedback = UIImpactFeedbackGenerator(style: .soft)
     private var currentBanner: SKNode?
 
+    // 一時停止
+    private var isGamePaused = false
+    private let pauseButton = SKNode()
+    private var pauseMenu: SKNode?
+    private var resumeButton: SKNode?
+    private var quitButton: SKNode?
+    /// 一時停止ボタンの位置（論理座標）
+    private var pauseButtonPos: CGPoint { CGPoint(x: W - 32, y: H - bottomInset - 22) }
+
     // MARK: - Initializer
 
     init(size: CGSize, difficulty: Difficulty) {
@@ -551,6 +560,9 @@ class GameScene: SKScene {
         fade.alpha = 0
         fade.zPosition = 1000
         addChild(fade)
+        // 電話や通知でアプリから離れたら、自動で一時停止する
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive),
+                                               name: UIApplication.willResignActiveNotification, object: nil)
 
         imo.reset(x: px)
         playerLayer.addChild(imo)
@@ -563,9 +575,15 @@ class GameScene: SKScene {
         }]))
     }
 
+    override func willMove(from view: SKView) {
+        super.willMove(from: view)
+        NotificationCenter.default.removeObserver(self)
+    }
+
     override func update(_ currentTime: TimeInterval) {
         let realDt = lastUpdateTime == 0 ? 1.0 / 60.0 : min(currentTime - lastUpdateTime, 1.0 / 20.0)
         lastUpdateTime = currentTime
+        guard !isGamePaused else { return }
         step(CGFloat(realDt))
         render()
     }
@@ -574,11 +592,19 @@ class GameScene: SKScene {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let p = touches.first?.location(in: self) else { return }
+        if isGamePaused {
+            handlePauseMenuTap(p)
+            return
+        }
+        if canPause && dist2(p.x / k, H - p.y / k, pauseButtonPos.x, pauseButtonPos.y) < 28 * 28 {
+            pauseGame()
+            return
+        }
         dragStart = (p.x / k, H - p.y / k, tx, ty)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let start = dragStart, let p = touches.first?.location(in: self) else { return }
+        guard !isGamePaused, let start = dragStart, let p = touches.first?.location(in: self) else { return }
         tx = clamp(start.tx + (p.x / k - start.x) * 1.6, 22, W - 22)
         ty = clamp(start.ty + (H - p.y / k - start.y) * 1.6, minY, maxY)
     }
@@ -1951,6 +1977,21 @@ class GameScene: SKScene {
         hudLayer.addChild(panel(CGRect(x: 10, y: bottomY, width: 210, height: 24), radius: 12, alpha: 0.88, stroke: false))
         statLabel.position = P(22, bottomY + 16)
         hudLayer.addChild(statLabel)
+
+        let circle = SKShapeNode(circleOfRadius: 17)
+        circle.fillColor = Art.cream.withAlphaComponent(0.92)
+        circle.strokeColor = Art.line
+        circle.lineWidth = 2.4
+        pauseButton.addChild(circle)
+        for dx: CGFloat in [-4.5, 4.5] {
+            let bar = SKShapeNode(rectOf: CGSize(width: 4.5, height: 14), cornerRadius: 1.5)
+            bar.fillColor = Art.line
+            bar.strokeColor = .clear
+            bar.position = CGPoint(x: dx, y: 0)
+            pauseButton.addChild(bar)
+        }
+        pauseButton.position = P(pauseButtonPos.x, pauseButtonPos.y)
+        hudLayer.addChild(pauseButton)
     }
 
     private func refreshHearts() {
@@ -2003,6 +2044,119 @@ class GameScene: SKScene {
         let rate = String(format: "%.1f", 1 / fireRate)
         statLabel.text = stage >= 1 ? "\(shotType.name) \(shotCount)   攻 \(Int(power))   連射 \(rate)/s" : (element.map { "\($0.name)の魔法だけ・キノコを食べよう" } ?? "攻撃なし・キノコを食べよう")
         defenseLine.isHidden = stage < 1
+    }
+
+    // MARK: - Pause
+
+    private var canPause: Bool { (mode == .play || mode == .boss || mode == .exit) && !warping }
+
+    @objc private func appWillResignActive() {
+        if canPause && !isGamePaused { pauseGame() }
+    }
+
+    private func pauseGame() {
+        guard !isGamePaused else { return }
+        isGamePaused = true
+        dragStart = nil
+        world.isPaused = true
+        presenter.playItemsound()
+
+        let menu = SKNode()
+        menu.zPosition = 900
+        let dim = SKSpriteNode(color: UIColor(white: 0, alpha: 0.45), size: size)
+        dim.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        menu.addChild(dim)
+
+        let card = SKNode()
+        card.setScale(k)
+        card.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        menu.addChild(card)
+        let back = SKShapeNode(rectOf: CGSize(width: 290, height: 250), cornerRadius: 24)
+        back.fillColor = Art.cream.withAlphaComponent(0.97)
+        back.strokeColor = Art.line
+        back.lineWidth = 3
+        card.addChild(back)
+
+        let title = SKLabelNode()
+        title.attributedText = NSAttributedString(string: "一時停止", attributes: [
+            .font: UIFont(name: GameConst.fontName, size: 34) ?? Art.font(34),
+            .foregroundColor: UIColor(hex: 0xff8a3d),
+            .strokeColor: Art.line,
+            .strokeWidth: -5,
+        ])
+        title.verticalAlignmentMode = .center
+        title.position = CGPoint(x: 0, y: 80)
+        card.addChild(title)
+
+        let info = GameScene.label(12)
+        info.horizontalAlignmentMode = .center
+        info.text = "\(currentArea.name)・Lv.\(level) \(form.displayName)"
+        info.position = CGPoint(x: 0, y: 44)
+        card.addChild(info)
+
+        let resume = menuButton("つづける", color: UIColor(hex: 0x9fd94c), shadow: UIColor(hex: 0x5e9a2c))
+        resume.position = CGPoint(x: 0, y: 2)
+        card.addChild(resume)
+        let quit = menuButton("タイトルへもどる", color: UIColor(hex: 0xe3ddcf), shadow: UIColor(hex: 0xa69f8e))
+        quit.position = CGPoint(x: 0, y: -68)
+        card.addChild(quit)
+        let note = GameScene.label(10)
+        note.horizontalAlignmentMode = .center
+        note.fontColor = Art.line.withAlphaComponent(0.6)
+        note.text = "もどると、このプレイの記録は残りません"
+        note.position = CGPoint(x: 0, y: -108)
+        card.addChild(note)
+
+        addChild(menu)
+        menu.alpha = 0
+        menu.run(.fadeIn(withDuration: 0.12))
+        pauseMenu = menu
+        resumeButton = resume
+        quitButton = quit
+    }
+
+    private func menuButton(_ text: String, color: UIColor, shadow: UIColor) -> SKNode {
+        let group = SKNode()
+        let w: CGFloat = 220, h: CGFloat = 50
+        let base = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 16)
+        base.fillColor = shadow
+        base.strokeColor = .clear
+        base.position = CGPoint(x: 0, y: -4)
+        group.addChild(base)
+        let face = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 16)
+        face.fillColor = color
+        face.strokeColor = Art.line
+        face.lineWidth = 2.4
+        group.addChild(face)
+        let label = GameScene.label(18)
+        label.horizontalAlignmentMode = .center
+        label.verticalAlignmentMode = .center
+        label.text = text
+        group.addChild(label)
+        return group
+    }
+
+    private func handlePauseMenuTap(_ p: CGPoint) {
+        func hit(_ node: SKNode?) -> Bool {
+            guard let node, let parent = node.parent else { return false }
+            return node.contains(convert(p, to: parent))
+        }
+        if hit(resumeButton) {
+            resumeGame()
+        } else if hit(quitButton) {
+            presenter.playItemsound()
+            let scene = TitleScene(size: size)
+            view?.presentScene(scene, transition: .crossFade(withDuration: 0.4))
+        }
+    }
+
+    private func resumeGame() {
+        pauseMenu?.removeFromParent()
+        pauseMenu = nil
+        resumeButton = nil
+        quitButton = nil
+        world.isPaused = false
+        isGamePaused = false
     }
 
     // MARK: - Effects

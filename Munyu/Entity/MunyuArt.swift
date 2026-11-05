@@ -265,12 +265,17 @@ extension Art {
                     p.mv(-10 * k, cy + 4); p.ln(-11 * k, cy - 6 * k); p.ln(-4 * k, cy - 1); p.ln(0, cy - 9 * k)
                     p.ln(4 * k, cy - 1); p.ln(11 * k, cy - 6 * k); p.ln(10 * k, cy + 4); p.closeSubpath()
                 }
+                // 王冠のとがった方を頭の後ろ側（画面下）に向ける
+                c.saveGState()
+                c.translateBy(x: 0, y: (cy - 3) * 2)
+                c.scaleBy(x: 1, y: -1)
                 c.fs(crown, UIColor(hex: 0xffd23f), 2)
                 c.fill(C(0, cy - 1, 2.2), UIColor(hex: 0xff5fa2))
                 if F.rank >= 7 {
                     c.fill(C(-6 * k, cy, 1.6), UIColor(hex: 0x5cc0ff))
                     c.fill(C(6 * k, cy, 1.6), UIColor(hex: 0x5cc0ff))
                 }
+                c.restoreGState()
             }
             // 伝説の姿（Lv.10）は、どの系統でも王冠をかぶる
             if F.rank >= Levels.max && F.line != .leaf {
@@ -279,11 +284,16 @@ extension Art {
                     p.mv(-11, cy + 4); p.ln(-12, cy - 7); p.ln(-4, cy - 1); p.ln(0, cy - 10)
                     p.ln(4, cy - 1); p.ln(12, cy - 7); p.ln(11, cy + 4); p.closeSubpath()
                 }
+                // 王冠のとがった方を頭の後ろ側（画面下）に向ける
+                c.saveGState()
+                c.translateBy(x: 0, y: (cy - 3) * 2)
+                c.scaleBy(x: 1, y: -1)
                 c.saveGState()
                 c.setShadow(offset: .zero, blur: 8, color: UIColor(hex: 0xffe46b).cgColor)
                 c.fs(crown, UIColor(hex: 0xffd23f), 2)
                 c.restoreGState()
                 c.fill(C(0, cy - 1, 2.4), UIColor(hex: 0x5cc0ff))
+                c.restoreGState()
             }
             // 目
             let ey = -hr * 0.1, ex = hr * 0.48, er = hr * 0.25
