@@ -239,19 +239,27 @@ class TitleScene: SKScene {
         ring.run(.sequence([.group([.scale(to: 2.6, duration: 0.4), .fadeOut(withDuration: 0.4)]), .removeFromParent()]))
     }
 
+    /// 横長の画面（iPad や開いた折りたたみ端末）では、難易度ボタンを横に並べて紹介の場所を広く取る
+    private var isCompact: Bool { H < 600 }
+
     /// 難易度ボタンの一番上（論理座標）
     private var buttonTop: CGFloat {
         let ranking: CGFloat = GKLocalPlayer.local.isAuthenticated ? 52 : 0
-        return H - bottomInset - 26 - ranking - CGFloat(difficulties.count) * 70
+        let buttons: CGFloat = isCompact ? 72 : CGFloat(difficulties.count) * 70
+        return H - bottomInset - 26 - ranking - buttons
     }
 
     private func setupButtons() {
         let hasRanking = GKLocalPlayer.local.isAuthenticated
         let bottom = H - bottomInset - 26 - (hasRanking ? 52 : 0)
         for (i, d) in difficulties.enumerated() {
-            let node = difficultyButton(d)
-            let y = bottom - CGFloat(difficulties.count - i) * 70 + 35
-            node.position = CGPoint(x: W / 2, y: H - y)
+            let node = isCompact ? compactDifficultyButton(d) : difficultyButton(d)
+            if isCompact {
+                node.position = CGPoint(x: W / 2 + (CGFloat(i) - 1) * 116, y: H - (bottom - 36))
+            } else {
+                let y = bottom - CGFloat(difficulties.count - i) * 70 + 35
+                node.position = CGPoint(x: W / 2, y: H - y)
+            }
             node.zPosition = 10
             world.addChild(node)
             buttons.append((node, d))
@@ -304,6 +312,32 @@ class TitleScene: SKScene {
         bestValue.horizontalAlignmentMode = .right
         bestValue.position = CGPoint(x: w / 2 - 18, y: -9)
         group.addChild(bestValue)
+        return group
+    }
+
+    /// 横に並べる小さい難易度ボタン
+    private func compactDifficultyButton(_ d: Difficulty) -> SKNode {
+        let group = SKNode()
+        let w: CGFloat = 108, h: CGFloat = 64
+        let base = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 16)
+        base.fillColor = d.shadowColor
+        base.strokeColor = .clear
+        base.position = CGPoint(x: 0, y: -5)
+        group.addChild(base)
+        let face = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 16)
+        face.fillColor = d.color
+        face.strokeColor = Art.line
+        face.lineWidth = 2.6
+        group.addChild(face)
+        let name = label(d.displayName, 17)
+        name.position = CGPoint(x: 0, y: 9)
+        if name.frame.width > w - 12 { name.setScale((w - 12) / name.frame.width) }
+        group.addChild(name)
+        let best = BestScore.get(d)
+        let bestLabel = label("ベスト \(best > 0 ? "\(best)" : "-")", 10)
+        bestLabel.fontColor = Art.line.withAlphaComponent(0.75)
+        bestLabel.position = CGPoint(x: 0, y: -15)
+        group.addChild(bestLabel)
         return group
     }
 
