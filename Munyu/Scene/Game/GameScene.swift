@@ -513,6 +513,13 @@ class GameScene: SKScene {
     private let damageFeedback = UIImpactFeedbackGenerator(style: .soft)
     private var currentBanner: SKNode?
 
+    // 復活（リワード広告）
+    private var hasRevived = false
+    private var isShowingAd = false
+    private var reviveMenu: SKNode?
+    private var reviveButton: SKNode?
+    private var giveUpButton: SKNode?
+
     // 一時停止
     private var isGamePaused = false
     private let pauseButton = SKNode()
@@ -578,6 +585,7 @@ class GameScene: SKScene {
     override func willMove(from view: SKView) {
         super.willMove(from: view)
         NotificationCenter.default.removeObserver(self)
+        NotificationCenter.default.post(name: .hideBannerAd, object: nil)
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -593,7 +601,7 @@ class GameScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let p = touches.first?.location(in: self) else { return }
         if isGamePaused {
-            handlePauseMenuTap(p)
+            if reviveMenu != nil { handleReviveTap(p) } else { handlePauseMenuTap(p) }
             return
         }
         if canPause && dist2(p.x / k, H - p.y / k, pauseButtonPos.x, pauseButtonPos.y) < 28 * 28 {
@@ -1057,7 +1065,7 @@ class GameScene: SKScene {
         let p = point ?? CGPoint(x: px, y: py - 40)
         pop(text, p.x, p.y, UIColor(hex: 0xff6a5e), 15)
         refreshHearts()
-        if hp <= 0 { end(win: false) }
+        if hp <= 0 { gameOver() }
     }
 
     @discardableResult
@@ -2051,7 +2059,7 @@ class GameScene: SKScene {
     private var canPause: Bool { (mode == .play || mode == .boss || mode == .exit) && !warping }
 
     @objc private func appWillResignActive() {
-        if canPause && !isGamePaused { pauseGame() }
+        if canPause && !isGamePaused && reviveMenu == nil { pauseGame() }
     }
 
     private func pauseGame() {
@@ -2113,6 +2121,7 @@ class GameScene: SKScene {
         pauseMenu = menu
         resumeButton = resume
         quitButton = quit
+        NotificationCenter.default.post(name: .showBannerAd, object: nil)
     }
 
     private func menuButton(_ text: String, color: UIColor, shadow: UIColor) -> SKNode {
@@ -2151,12 +2160,143 @@ class GameScene: SKScene {
     }
 
     private func resumeGame() {
+        NotificationCenter.default.post(name: .hideBannerAd, object: nil)
         pauseMenu?.removeFromParent()
         pauseMenu = nil
         resumeButton = nil
         quitButton = nil
         world.isPaused = false
         isGamePaused = false
+    }
+
+    // MARK: - Revive
+
+    /// HPが0になった。1回だけ、広告を見て復活できる
+    private func gameOver() {
+        if !hasRevived && RewardedAdManager.shared.isReady {
+            showReviveOffer()
+        } else {
+            end(win: false)
+        }
+    }
+
+    private func showReviveOffer() {
+        isGamePaused = true
+        dragStart = nil
+        world.isPaused = true
+        imo.dizzy = true
+        render()
+
+        let menu = SKNode()
+        menu.zPosition = 900
+        let dim = SKSpriteNode(color: UIColor(white: 0, alpha: 0.5), size: size)
+        dim.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        menu.addChild(dim)
+        let card = SKNode()
+        card.setScale(k)
+        card.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        menu.addChild(card)
+        let back = SKShapeNode(rectOf: CGSize(width: 300, height: 260), cornerRadius: 24)
+        back.fillColor = Art.cream.withAlphaComponent(0.97)
+        back.strokeColor = Art.line
+        back.lineWidth = 3
+        card.addChild(back)
+
+        let title = SKLabelNode()
+        title.attributedText = NSAttributedString(string: "やられた…", attributes: [
+            .font: UIFont(name: GameConst.fontName, size: 32) ?? Art.font(32),
+            .foregroundColor: UIColor(hex: 0xff8a3d),
+            .strokeColor: Art.line,
+            .strokeWidth: -5,
+        ])
+        title.verticalAlignmentMode = .center
+        title.position = CGPoint(x: 0, y: 88)
+        card.addChild(title)
+        let sub = GameScene.label(13)
+        sub.horizontalAlignmentMode = .center
+        sub.text = "広告を見ると、HP満タンでここから復活できる"
+        sub.position = CGPoint(x: 0, y: 50)
+        card.addChild(sub)
+        let info = GameScene.label(11)
+        info.horizontalAlignmentMode = .center
+        info.fontColor = Art.line.withAlphaComponent(0.65)
+        info.text = "\(currentArea.name)・Lv.\(level) \(form.displayName)"
+        info.position = CGPoint(x: 0, y: 28)
+        card.addChild(info)
+
+        let revive = menuButton("▶ 広告を見て復活", color: UIColor(hex: 0xffd23f), shadow: UIColor(hex: 0xb8901c))
+        revive.position = CGPoint(x: 0, y: -14)
+        card.addChild(revive)
+        revive.run(.repeatForever(.sequence([.scale(to: 1.05, duration: 0.45), .scale(to: 1, duration: 0.45)])))
+        let giveUp = menuButton("あきらめる", color: UIColor(hex: 0xe3ddcf), shadow: UIColor(hex: 0xa69f8e))
+        giveUp.position = CGPoint(x: 0, y: -84)
+        card.addChild(giveUp)
+
+        addChild(menu)
+        menu.alpha = 0
+        menu.run(.fadeIn(withDuration: 0.2))
+        reviveMenu = menu
+        reviveButton = revive
+        giveUpButton = giveUp
+    }
+
+    private func handleReviveTap(_ p: CGPoint) {
+        guard !isShowingAd else { return }
+        func hit(_ node: SKNode?) -> Bool {
+            guard let node, let parent = node.parent else { return false }
+            return node.contains(convert(p, to: parent))
+        }
+        if hit(reviveButton) {
+            isShowingAd = true
+            let shown = RewardedAdManager.shared.show { [weak self] earned in
+                guard let self else { return }
+                self.isShowingAd = false
+                if earned { self.revive() } else { self.giveUp() }
+            }
+            if !shown {
+                isShowingAd = false
+                giveUp()
+            }
+        } else if hit(giveUpButton) {
+            giveUp()
+        }
+    }
+
+    private func closeReviveMenu() {
+        reviveMenu?.removeFromParent()
+        reviveMenu = nil
+        reviveButton = nil
+        giveUpButton = nil
+        world.isPaused = false
+        isGamePaused = false
+    }
+
+    private func giveUp() {
+        closeReviveMenu()
+        end(win: false)
+    }
+
+    /// HP満タンで復活。少しの間は無敵で、まわりの敵と弾を消す
+    private func revive() {
+        closeReviveMenu()
+        hasRevived = true
+        imo.dizzy = false
+        hp = maxHp
+        refreshHearts()
+        invincible = 3
+        ghost = 1
+        enemyShots.forEach { $0.node.removeFromParent() }
+        enemyShots.removeAll()
+        for f in foes where dist2(f.x, f.y, px, py) < 200 * 200 {
+            puff(f.x, f.y)
+            f.hp = 0
+            f.gone = true
+        }
+        ring(px, py, UIColor(hex: 0xfff6a8), 180, 0.8)
+        burst(px, py, UIColor(hex: 0xffd23f), 30)
+        banner("復活！", "HPが満タンになった")
+        presenter.playItemsound()
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
     }
 
     // MARK: - Effects

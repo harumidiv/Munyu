@@ -21,6 +21,7 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
     private var lastUpdateTime: TimeInterval = 0
     private var replayButton = SKNode()
     private var rankingButton = SKNode()
+    private var isLeaving = false
 
     // MARK: - Initializer
 
@@ -42,6 +43,13 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
         Art.pixelScale = k * view.contentScaleFactor
         setupScene()
         sendLeaderboardScore()
+        InterstitialAdManager.shared.playEnded()
+        NotificationCenter.default.post(name: .showBannerAd, object: nil)
+    }
+
+    override func willMove(from view: SKView) {
+        super.willMove(from: view)
+        NotificationCenter.default.post(name: .hideBannerAd, object: nil)
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -104,6 +112,9 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
             : "\(areaName)・\(result.distance)m 地点・\(stageName)"
         let detailLabel = label(detail, 15)
         detailLabel.position = CGPoint(x: 0, y: -36 * k)
+        // 長い時はカードからはみ出さないように縮める
+        let maxWidth = size.width - 64 * k
+        if detailLabel.frame.width > maxWidth { detailLabel.setScale(maxWidth / detailLabel.frame.width) }
         card.addChild(detailLabel)
         let killLabel = label("倒した虫 \(result.kills)匹・通した虫 \(result.leaked)匹", 13)
         killLabel.fontColor = Art.line.withAlphaComponent(0.7)
@@ -117,7 +128,9 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
 
         replayButton = button("もう一度", color: UIColor(hex: 0xff8a3d), shadow: UIColor(hex: 0xa34a12))
         rankingButton = button("ランキング", color: UIColor(hex: 0x7fd0ff), shadow: UIColor(hex: 0x2f7fb0))
-        let buttonY = size.height * 0.14 + (view?.safeAreaInsets.bottom ?? 0) * 0.5
+        // 下にバナー広告が出るので、その分ボタンを上げておく
+        let bannerSpace = BannerAdModel.height + 14
+        let buttonY = max(size.height * 0.14, (view?.safeAreaInsets.bottom ?? 0) + bannerSpace + 30 * k)
         if GKLocalPlayer.local.isAuthenticated {
             replayButton.position = CGPoint(x: size.width * 0.28, y: buttonY)
             rankingButton.position = CGPoint(x: size.width * 0.72, y: buttonY)
@@ -162,8 +175,14 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
         let location = touch.location(in: self)
 
         if replayButton.contains(location) {
-            let scene = TitleScene(size: self.size)
-            self.view?.presentScene(scene, transition: .crossFade(withDuration: 0.5))
+            guard !isLeaving else { return }
+            isLeaving = true
+            // 3プレイに1回、タイトルへ戻る前に広告を出す
+            InterstitialAdManager.shared.showIfNeeded { [weak self] in
+                guard let self else { return }
+                let scene = TitleScene(size: self.size)
+                self.view?.presentScene(scene, transition: .crossFade(withDuration: 0.5))
+            }
         } else if rankingButton.parent != nil && rankingButton.contains(location) {
             NotificationCenter.default.post(name: .leaderBordScoreRanking, object: nil)
         }

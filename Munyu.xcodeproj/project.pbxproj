@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -30,6 +30,8 @@
 		49C8DC512E7AEB6C0071CC9B /* GameCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */; };
 		49EF5314257B3AE4001396C8 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49EF5313257B3AE4001396C8 /* GameKit.framework */; };
 		A1C0DE01000000000000000B /* Caterpillar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE01000000000000000A /* Caterpillar.swift */; };
+		A1C0DE04000000000000000B /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE04000000000000000A /* AdManager.swift */; };
+		A1C0DE10000000000000000B /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A1C0DE10000000000000000C /* GoogleMobileAds */; };
 		A1C0DE02000000000000000B /* GameConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE02000000000000000A /* GameConfig.swift */; };
 		A1C0DE03000000000000000B /* MunyuArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE03000000000000000A /* MunyuArt.swift */; };
 /* End PBXBuildFile section */
@@ -82,6 +84,7 @@
 		49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterView.swift; sourceTree = "<group>"; };
 		49EF5313257B3AE4001396C8 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		A1C0DE01000000000000000A /* Caterpillar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Caterpillar.swift; sourceTree = "<group>"; };
+		A1C0DE04000000000000000A /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
 		A1C0DE02000000000000000A /* GameConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameConfig.swift; sourceTree = "<group>"; };
 		A1C0DE03000000000000000A /* MunyuArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MunyuArt.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -92,6 +95,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				49EF5314257B3AE4001396C8 /* GameKit.framework in Frameworks */,
+				A1C0DE10000000000000000B /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +233,7 @@
 		0DFD69602275786A000DBD93 /* Entity */ = {
 			isa = PBXGroup;
 			children = (
+				A1C0DE04000000000000000A /* AdManager.swift */,
 				A1C0DE01000000000000000A /* Caterpillar.swift */,
 				A1C0DE02000000000000000A /* GameConfig.swift */,
 				A1C0DE03000000000000000A /* MunyuArt.swift */,
@@ -262,6 +267,9 @@
 			dependencies = (
 			);
 			name = Munyu;
+			packageProductDependencies = (
+				A1C0DE10000000000000000C /* GoogleMobileAds */,
+			);
 			productName = Munyu;
 			productReference = 0D54E6A3227462B100AADEA2 /* Munyu.app */;
 			productType = "com.apple.product-type.application";
@@ -337,6 +345,9 @@
 				Base,
 			);
 			mainGroup = 0D54E69A227462B100AADEA2;
+			packageReferences = (
+				A1C0DE10000000000000000D /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			productRefGroup = 0D54E6A4227462B100AADEA2 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -386,6 +397,7 @@
 				0DFD69642275932D000DBD93 /* ObjectPosition.swift in Sources */,
 				49C8DBE42E7A83890071CC9B /* ContentView.swift in Sources */,
 				0D048FD3227897DD00852FFA /* Difficulty.swift in Sources */,
+				A1C0DE04000000000000000B /* AdManager.swift in Sources */,
 				A1C0DE01000000000000000B /* Caterpillar.swift in Sources */,
 				A1C0DE02000000000000000B /* GameConfig.swift in Sources */,
 				A1C0DE03000000000000000B /* MunyuArt.swift in Sources */,
@@ -743,6 +755,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1C0DE10000000000000000D /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.12.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1C0DE10000000000000000C /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1C0DE10000000000000000D /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0D54E69B227462B100AADEA2 /* Project object */;
 }
