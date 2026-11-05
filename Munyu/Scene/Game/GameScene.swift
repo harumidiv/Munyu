@@ -1815,7 +1815,7 @@ class GameScene: SKScene {
         imo.dizzy = !win
         imo.alpha = 1
         let score = Int(dist) + kills * 20 + bossesBeaten * 1500 + (win ? 3000 + max(0, hp) * 300 : 0)
-        let result = GameResult(score: score, isClear: win, stage: level, distance: Int(dist), kills: kills, leaked: leaked, area: areaIndex, form: form.id)
+        let result = GameResult(score: score, isClear: win, stage: level, distance: Int(dist), kills: kills, leaked: leaked, area: areaIndex, form: form.id, difficulty: difficulty)
         run(.sequence([.wait(forDuration: win ? 1.2 : 0.9), .run { [weak self] in
             guard let self else { return }
             let scene = ResultScene(size: self.size, result: result)

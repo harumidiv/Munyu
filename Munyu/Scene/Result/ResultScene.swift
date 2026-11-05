@@ -87,6 +87,15 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
         let scoreLabel = label("スコア \(score)", 30)
         scoreLabel.position = CGPoint(x: 0, y: 4 * k)
         card.addChild(scoreLabel)
+        // ベストスコアの更新
+        let isBest = BestScore.submit(score, for: result.difficulty)
+        let bestLabel = label(isBest ? "ベスト更新！" : "ベスト \(BestScore.get(result.difficulty))", isBest ? 15 : 12)
+        bestLabel.fontColor = isBest ? UIColor(hex: 0xff6a5e) : Art.line.withAlphaComponent(0.7)
+        bestLabel.position = CGPoint(x: 0, y: -90 * k)
+        card.addChild(bestLabel)
+        if isBest {
+            bestLabel.run(.repeatForever(.sequence([.scale(to: 1.12, duration: 0.4), .scale(to: 1, duration: 0.4)])))
+        }
 
         let stageName = "Lv.\(result.stage) " + Forms.find(result.form).withRank(result.stage).displayName
         let areaName = Area(rawValue: result.area)?.name ?? ""

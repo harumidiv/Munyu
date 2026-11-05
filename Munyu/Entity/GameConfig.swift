@@ -348,6 +348,46 @@ enum GateOption: Equatable {
 }
 
 extension Difficulty {
+    var displayName: String {
+        switch self {
+        case .easy: return "かんたん"
+        case .normal: return "ふつう"
+        case .hard: return "むずかしい"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .easy: return "敵がやわらかい"
+        case .normal: return "ちょうどいい強さ"
+        case .hard: return "敵がかたくて多い"
+        }
+    }
+
+    var color: UIColor {
+        switch self {
+        case .easy: return UIColor(hex: 0x9fd94c)
+        case .normal: return UIColor(hex: 0xffb84d)
+        case .hard: return UIColor(hex: 0xff6a5e)
+        }
+    }
+
+    var shadowColor: UIColor {
+        switch self {
+        case .easy: return UIColor(hex: 0x5e9a2c)
+        case .normal: return UIColor(hex: 0xb8761c)
+        case .hard: return UIColor(hex: 0xb83a30)
+        }
+    }
+
+    var key: String {
+        switch self {
+        case .easy: return "easy"
+        case .normal: return "normal"
+        case .hard: return "hard"
+        }
+    }
+
     /// 敵HPの倍率
     var enemyHP: CGFloat {
         switch self {
@@ -375,6 +415,21 @@ extension Difficulty {
     }
 }
 
+/// 難易度ごとのベストスコア（端末に保存）
+enum BestScore {
+    private static func key(_ d: Difficulty) -> String { "best.score.\(d.key)" }
+
+    static func get(_ d: Difficulty) -> Int { UserDefaults.standard.integer(forKey: key(d)) }
+
+    /// 記録を更新したら true
+    @discardableResult
+    static func submit(_ score: Int, for d: Difficulty) -> Bool {
+        guard score > get(d) else { return false }
+        UserDefaults.standard.set(score, forKey: key(d))
+        return true
+    }
+}
+
 /// 1プレイの結果
 struct GameResult {
     let score: Int
@@ -387,4 +442,5 @@ struct GameResult {
     let area: Int
     /// 最後の姿（Form.id）
     let form: String
+    let difficulty: Difficulty
 }
