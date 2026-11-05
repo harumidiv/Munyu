@@ -30,10 +30,10 @@
 		49C8DC512E7AEB6C0071CC9B /* GameCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */; };
 		49EF5314257B3AE4001396C8 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49EF5313257B3AE4001396C8 /* GameKit.framework */; };
 		A1C0DE01000000000000000B /* Caterpillar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE01000000000000000A /* Caterpillar.swift */; };
-		A1C0DE04000000000000000B /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE04000000000000000A /* AdManager.swift */; };
-		A1C0DE10000000000000000B /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A1C0DE10000000000000000C /* GoogleMobileAds */; };
 		A1C0DE02000000000000000B /* GameConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE02000000000000000A /* GameConfig.swift */; };
 		A1C0DE03000000000000000B /* MunyuArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE03000000000000000A /* MunyuArt.swift */; };
+		A1C0DE04000000000000000B /* AdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE04000000000000000A /* AdManager.swift */; };
+		A1C0DE10000000000000000B /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A1C0DE10000000000000000C /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,9 +84,9 @@
 		49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenterView.swift; sourceTree = "<group>"; };
 		49EF5313257B3AE4001396C8 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		A1C0DE01000000000000000A /* Caterpillar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Caterpillar.swift; sourceTree = "<group>"; };
-		A1C0DE04000000000000000A /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
 		A1C0DE02000000000000000A /* GameConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameConfig.swift; sourceTree = "<group>"; };
 		A1C0DE03000000000000000A /* MunyuArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MunyuArt.swift; sourceTree = "<group>"; };
+		A1C0DE04000000000000000A /* AdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -591,7 +591,8 @@
 				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.adventure-games";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -615,7 +616,8 @@
 				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.adventure-games";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -637,7 +639,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = MunyuTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -659,7 +661,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = MunyuTests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -680,7 +682,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = MunyuUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -701,7 +703,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = MunyuUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
