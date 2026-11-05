@@ -462,6 +462,8 @@ class GameScene: SKScene {
     private var shotCount = 1
     private var shotType: ShotType = .leaf
     private var power: CGFloat = 1
+    /// 攻撃力UPを取った回数
+    private var powerItems = 0
     private var element: Element?
     private var cooldown: CGFloat = 0
     private var magicCooldown: CGFloat = 2
@@ -1036,8 +1038,10 @@ class GameScene: SKScene {
     private func spawnFoe() -> Foe {
         let kind = pickFoeKind()
         let st = kind.stats
-        // 進んだ合計距離で少しずつかたくなる
-        let f = Foe(kind: kind, hp: st.hp * (1 + dist / 800) * difficulty.enemyHP, r: st.r, vy: st.vy)
+        // エリアが進むと大きくかたくなり、エリアの中でも奥ほど少しかたくなる
+        let areaHP: [CGFloat] = [1, 2.5, 5]
+        let hpScale = areaHP[min(areaIndex, areaHP.count - 1)] * (1 + areaDist / GameConst.areaLength * 0.6)
+        let f = Foe(kind: kind, hp: st.hp * hpScale * difficulty.enemyHP, r: st.r, vy: st.vy)
         f.x = .random(in: 56...(W - 56))
         f.baseX = clamp(f.x, 110, W - 110)
         foes.append(f)
@@ -1260,22 +1264,43 @@ class GameScene: SKScene {
     }
 
     /// 今持っている属性・弾の種類は出さない
+    /// 強化の上限。これ以上は強くならず、そのアイテムも出なくなる
+    private let minFireRate: CGFloat = 1 / 8
+    private let maxPowerItems = 5
+    private let maxShotCount = 6
+    private let maxHearts = 10
+
+    /// 今持っている属性・弾の種類と、上限まで取った強化は出さない
     private func randomPowerOption() -> GateOption {
         var pool = GateOption.all
         if let e = element { pool.removeAll { $0 == .magic(e) } }
         pool.removeAll { $0 == .bullet(shotType) }
-        return pool.randomElement() ?? .hp
+        if fireRate <= minFireRate + 0.0001 { pool.removeAll { $0 == .rate } }
+        if powerItems >= maxPowerItems { pool.removeAll { $0 == .power } }
+        if shotCount >= maxShotCount { pool.removeAll { $0 == .shot } }
+        if maxHp >= maxHearts && hp >= maxHp { pool.removeAll { $0 == .hp } }
+        return pool.randomElement() ?? .bullet(.leaf)
+    }
+
+    private func speedUp(_ k: CGFloat) { fireRate = max(minFireRate, fireRate * k) }
+
+    private func addHearts(_ n: Int, heal: Int) {
+        maxHp = min(maxHearts, maxHp + n)
+        hp = min(maxHp, hp + heal)
     }
 
     private func apply(_ o: GateOption) {
         switch o {
-        case .rate: fireRate *= 0.8
-        case .shot: shotCount = min(shotCount + 1, 5)
-        case .power: power += 1
+        case .rate: speedUp(0.8)
+        case .shot: shotCount = min(shotCount + 1, maxShotCount)
+        case .power:
+            if powerItems < maxPowerItems {
+                power += 1
+                powerItems += 1
+            }
         case .bullet(let s): shotType = s
         case .hp:
-            maxHp += 1
-            hp = min(maxHp, hp + 2)
+            addHearts(1, heal: 2)
             refreshHearts()
         case .magic(let e):
             element = e
@@ -1306,33 +1331,32 @@ class GameScene: SKScene {
         }
         switch level {
         case 2:
-            shotCount = min(shotCount + 1, 6)
+            shotCount = min(shotCount + 1, maxShotCount)
             bonus.append("葉っぱ弾が撃てる")
         case 3, 7:
-            fireRate *= 0.88
+            speedUp(0.88)
             bonus.append("連射 UP")
         case 4, 8:
             power += 1
             bonus.append("攻撃力 UP")
         case 6, 9:
-            shotCount = min(shotCount + 1, 6)
+            shotCount = min(shotCount + 1, maxShotCount)
             bonus.append("弾 +1")
         case 10:
             power += 1
-            fireRate *= 0.85
+            speedUp(0.85)
             hp = maxHp
             bonus.append("全回復・攻撃力と連射 UP")
         default: break
         }
         if level % 3 == 0 {
-            maxHp += 1
-            hp = min(maxHp, hp + 1)
+            addHearts(1, heal: 1)
             bonus.append("HP +1")
         }
         refreshHearts()
         imo.setForm(form)
-        let evolved = form.displayName != oldName
-        if evolved {
+        // レベルが上がるたびに呼び名と見た目が変わる
+        if form.displayName != oldName {
             slow = 1.1
             banner(form.displayName, "進化！ Lv.\(level)  " + bonus.joined(separator: "・"))
             ring(px, py, UIColor(hex: 0xfff6a8), 140, 0.8)
@@ -1360,8 +1384,8 @@ class GameScene: SKScene {
     private var nextForm: (level: Int, form: Form)? {
         switch level {
         case 1: return (2, Forms.lv2(predictedLine).withRank(2))
-        case 2...4: return (5, Forms.lv3(form.line ?? .leaf, element).withRank(5))
-        case 5..<Levels.max: return (Levels.max, form.withRank(Levels.max))
+        case 4: return (5, Forms.lv3(form.line ?? .leaf, element).withRank(5))
+        case 2..<Levels.max: return (level + 1, form.withRank(level + 1))
         default: return nil
         }
     }
@@ -1369,11 +1393,11 @@ class GameScene: SKScene {
     private func applyFormBonus(_ f: Form) {
         switch (f.level, f.line, f.element) {
         case (1, .horn, _): power += 1
-        case (1, .shell, _): maxHp += 2; hp = min(maxHp, hp + 2)
+        case (1, .shell, _): addHearts(2, heal: 2)
         case (1, .leaf, _): elemRate *= 0.75
         case (2, .horn, nil): power += 2
-        case (2, .shell, nil): maxHp += 3; hp = min(maxHp, hp + 3)
-        case (2, .leaf, nil): shotCount = min(shotCount + 1, 5); fireRate *= 0.8
+        case (2, .shell, nil): addHearts(3, heal: 3)
+        case (2, .leaf, nil): shotCount = min(shotCount + 1, maxShotCount); speedUp(0.8)
         case (2, _, .some):
             elemPower *= 1.6
             elemRate *= 0.8

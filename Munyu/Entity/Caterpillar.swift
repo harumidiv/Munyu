@@ -38,6 +38,8 @@ final class CaterpillarNode: SKNode {
     private var segNodes: [SKSpriteNode] = []
     private let tailGlow = Art.glow.sprite()
     private let head = SKSpriteNode()
+    /// Lv.9からまわりを回るきらきら
+    private let sparkles = SKNode()
 
     private static let chewSteps: [CGFloat] = [0, 0.15, 0.3, 0.45, 0.6, 1]
 
@@ -60,6 +62,19 @@ final class CaterpillarNode: SKNode {
         tailGlow.zPosition = 0.5
         head.zPosition = 1
         addChild(head)
+        for i in 0..<3 {
+            let d = Art.dot.sprite()
+            d.color = UIColor(hex: 0xffe46b)
+            d.colorBlendFactor = 1
+            d.setScale(0.4)
+            let a = CGFloat(i) / 3 * .pi * 2
+            d.position = CGPoint(x: cos(a) * 46, y: sin(a) * 46)
+            sparkles.addChild(d)
+        }
+        sparkles.zPosition = 2
+        sparkles.position = CGPoint(x: 0, y: -22)
+        sparkles.run(.repeatForever(.rotate(byAngle: .pi * 2, duration: 2.4)))
+        addChild(sparkles)
         refreshLooks()
     }
 
@@ -136,6 +151,7 @@ final class CaterpillarNode: SKNode {
             tailGlow.color = element?.color ?? form.spot ?? UIColor(hex: 0xffd23f)
             tailGlow.size = CGSize(width: P.segR * 1.4, height: P.segR * 1.4)
         }
+        sparkles.isHidden = form.rank < 9
         aura.isHidden = stage < 1
         // Lv.8からは金色に光る
         let golden = form.rank >= 8
@@ -164,10 +180,12 @@ final class CaterpillarNode: SKNode {
             node.setScale(s.r / P.segR)
         }
         if hasWings, let first = segs.first {
-            let flap = 1 + sin(time * 12) * 0.12
+            // 羽はレベルとともに大きくなる
+            let flap = (1 + sin(time * 12) * 0.12) * (0.8 + CGFloat(form.rank - 5) * 0.07)
             for (i, w) in wings.enumerated() {
                 w.position = CGPoint(x: first.dx, y: -first.dy)
                 w.xScale = (i == 0 ? -1 : 1) * flap
+                w.yScale = 0.8 + CGFloat(form.rank - 5) * 0.07
             }
         }
         let chewRaw: CGFloat = dizzy ? 0 : openTime > 0 ? 1 : (sin(time * 14) + 1) * 0.3

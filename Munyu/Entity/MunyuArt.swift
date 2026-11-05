@@ -190,10 +190,11 @@ extension Art {
                     c.stroke(gem, 2)
                 }
             }
-            // ツノ（攻撃系）。頭の左右から前に向かって生える
+            let rk = CGFloat(F.rank)
+            // ツノ（攻撃系）。頭の左右から前に向かって生え、レベルごとに伸びる
             if F.line == .horn && st >= 1 {
                 let hornCol = F.element?.color ?? (st == 2 ? UIColor(hex: 0x4a2a12) : UIColor(hex: 0x8a4b14))
-                let len: CGFloat = st == 2 ? 1.25 : 0.85
+                let len: CGFloat = st == 2 ? 1.05 + (rk - 5) * 0.07 : 0.6 + (rk - 2) * 0.16
                 for s: CGFloat in [-1, 1] {
                     let bx = s * hr * 0.62, by = -hr * 0.45
                     let tx = s * hr * (0.75 + len * 0.45), ty = -hr * (0.5 + len * 0.8)
@@ -201,10 +202,15 @@ extension Art {
                         p.mv(bx - s * hr * 0.2, by + hr * 0.1)
                         p.qd(bx - s * hr * 0.05, ty + hr * 0.25, tx, ty)
                         if st == 2 {
-                            // 枝分かれ
+                            // 枝分かれ（Lv.8からは2本）
                             p.ln(tx - s * hr * 0.05, ty + hr * 0.3)
                             p.ln(tx + s * hr * 0.32, ty + hr * 0.12)
                             p.ln(tx + s * hr * 0.05, ty + hr * 0.45)
+                            if F.rank >= 8 {
+                                p.ln(tx + s * hr * 0.02, ty + hr * 0.6)
+                                p.ln(tx + s * hr * 0.36, ty + hr * 0.5)
+                                p.ln(tx + s * hr * 0.08, ty + hr * 0.72)
+                            }
                         }
                         p.qd(bx + s * hr * 0.35, by - hr * 0.1, bx + s * hr * 0.28, by + hr * 0.12)
                         p.closeSubpath()
@@ -228,34 +234,43 @@ extension Art {
                 }
                 c.fs(shell, F.dark, 2.6)
                 c.stroke(shape { p in p.mv(-hr * 0.55, hr * 0.72); p.qd(0, hr * 0.9, hr * 0.55, hr * 0.72) }, 1.6, F.spot ?? white(0.6))
-                if st == 2 {
-                    for i in 0..<5 {
-                        let a = CGFloat.pi * (0.15 + 0.175 * CGFloat(i))
+                // トゲはレベルごとに増える（Lv.3で2本〜Lv.10で7本）
+                let spikes = [0, 0, 0, 2, 3, 3, 4, 5, 6, 7, 7][min(F.rank, 10)]
+                if spikes > 0 {
+                    for i in 0..<spikes {
+                        let a = CGFloat.pi * (0.12 + 0.76 * (CGFloat(i) + 0.5) / CGFloat(spikes))
                         let x = cos(a) * hr * 0.98, y = hr * 0.2 + sin(a) * hr * 0.7
                         let sp = shape { p in
                             p.mv(x - hr * 0.1, y); p.ln(x + cos(a) * hr * 0.28, y + sin(a) * hr * 0.28); p.ln(x + hr * 0.1, y); p.closeSubpath()
                         }
                         c.fs(sp, F.spot ?? .white, 1.6)
                     }
-                    if let e = F.element { c.fs(C(0, hr * 0.72, hr * 0.12), e.color, 1.6) }
                 }
+                if st == 2, let e = F.element { c.fs(C(0, hr * 0.72, hr * 0.12 + (rk - 5) * 0.3), e.color, 1.6) }
             }
-            // 飾り（魔法系：Lv2は若葉、Lv3は王冠）
+            // 飾り（魔法系：Lv.2〜4は若葉が1〜3枚、Lv.5からは王冠。王冠の宝石はレベルで増える）
             if F.line == .leaf && st == 1 {
-                c.saveGState()
-                c.translateBy(x: hr * 0.45, y: hr * 0.4)
-                c.rotate(by: 0.9)
-                c.fs(shape { $0.mv(0, 0); $0.qd(13, -11, 24, -2); $0.qd(13, 7, 0, 0) }, UIColor(hex: 0x8be05a), 2.2)
-                c.stroke(shape { $0.mv(2, 0); $0.ln(19, -2) }, 1.4, UIColor(hex: 0x3d7a22))
-                c.restoreGState()
+                let leaves = min(3, F.rank - 1)
+                for i in 0..<leaves {
+                    c.saveGState()
+                    c.translateBy(x: hr * (0.45 - CGFloat(i) * 0.45), y: hr * (0.4 + (i == 1 ? 0.12 : 0)))
+                    c.rotate(by: 0.9 + CGFloat(i) * 0.7)
+                    c.fs(shape { $0.mv(0, 0); $0.qd(13, -11, 24, -2); $0.qd(13, 7, 0, 0) }, UIColor(hex: i == 1 ? 0x6fd14f : 0x8be05a), 2.2)
+                    c.stroke(shape { $0.mv(2, 0); $0.ln(19, -2) }, 1.4, UIColor(hex: 0x3d7a22))
+                    c.restoreGState()
+                }
             } else if F.line == .leaf && st == 2 {
-                let cy = hr * 0.35
+                let cy = hr * 0.35, k = 1 + (rk - 5) * 0.07
                 let crown = shape { p in
-                    p.mv(-10, cy + 4); p.ln(-11, cy - 6); p.ln(-4, cy - 1); p.ln(0, cy - 9)
-                    p.ln(4, cy - 1); p.ln(11, cy - 6); p.ln(10, cy + 4); p.closeSubpath()
+                    p.mv(-10 * k, cy + 4); p.ln(-11 * k, cy - 6 * k); p.ln(-4 * k, cy - 1); p.ln(0, cy - 9 * k)
+                    p.ln(4 * k, cy - 1); p.ln(11 * k, cy - 6 * k); p.ln(10 * k, cy + 4); p.closeSubpath()
                 }
                 c.fs(crown, UIColor(hex: 0xffd23f), 2)
                 c.fill(C(0, cy - 1, 2.2), UIColor(hex: 0xff5fa2))
+                if F.rank >= 7 {
+                    c.fill(C(-6 * k, cy, 1.6), UIColor(hex: 0x5cc0ff))
+                    c.fill(C(6 * k, cy, 1.6), UIColor(hex: 0x5cc0ff))
+                }
             }
             // 伝説の姿（Lv.10）は、どの系統でも王冠をかぶる
             if F.rank >= Levels.max && F.line != .leaf {
@@ -335,9 +350,16 @@ extension Art {
                 c.fs(plate, F.dark, 2)
                 c.stroke(shape { p in p.mv(-r * 0.5, r * 0.12); p.qd(0, -r * 0.1, r * 0.5, r * 0.12) }, 1.4, F.spot ?? white(0.6))
                 c.fill(E(-r * 0.3, -r * 0.25, r * 0.2, r * 0.08, -0.2), white(0.4))
-            } else if F.line == .horn && F.level == 2 {
-                // 小さなトゲ
-                for s: CGFloat in [-1, 0, 1] {
+                if F.rank >= 6 {
+                    // よろいのトゲ
+                    for s: CGFloat in [-1, 1] {
+                        let sp = shape { p in p.mv(s * r * 0.7, -r * 0.3); p.ln(s * r * 1.15, -r * 0.55); p.ln(s * r * 0.82, -r * 0.05); p.closeSubpath() }
+                        c.fs(sp, F.spot ?? .white, 1.4)
+                    }
+                }
+            } else if F.line == .horn && F.rank >= 3 {
+                // トゲ。レベルで増える
+                for s: CGFloat in (F.rank >= 5 ? [-1, 0, 1] : [0]) {
                     let sp = shape { p in p.mv(s * r * 0.45 - r * 0.12, 0); p.ln(s * r * 0.45, -r * 0.42); p.ln(s * r * 0.45 + r * 0.12, 0); p.closeSubpath() }
                     c.fs(sp, F.spot ?? F.dark, 1.4)
                 }

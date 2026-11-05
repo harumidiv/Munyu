@@ -108,7 +108,11 @@ struct Form: Equatable {
                          body: body, dark: dark, head: head, belly: belly, spot: spot)
     }
 
-    var displayName: String { rank >= Levels.max ? "伝説の" + name : name }
+    /// レベルごとの呼び名。Lv.2・5 は新しい姿、そのあとは「大」「超」…と強そうになる
+    var displayName: String {
+        let prefix = ["", "", "", "大", "超", "", "大", "超", "キング", "ゴッド", "伝説の"]
+        return prefix[min(rank, Levels.max)] + name
+    }
 
     func withRank(_ r: Int) -> Form {
         var f = self
@@ -218,9 +222,9 @@ enum Area: Int, CaseIterable {
     /// 難易度ごとのボスHPに掛ける倍率
     var bossHPScale: CGFloat {
         switch self {
-        case .meadow: return 0.85
-        case .cave: return 1.3
-        case .forest: return 1.8
+        case .meadow: return 1
+        case .cave: return 2.6
+        case .forest: return 5
         }
     }
 
