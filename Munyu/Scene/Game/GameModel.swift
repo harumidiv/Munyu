@@ -8,22 +8,16 @@
 
 import Foundation
 import AVFoundation
-import CoreMotion
 
 protocol GameModel {
     func damageSoundPlay()
     func itemSoundPlay()
-    func getAcceldata(accelX:@escaping(_ result: Float)->Void)
-    func stopAcceldata()
     func isCollision(item1: ObjectPosition, item2: ObjectPosition, range: Float) -> Bool 
 }
 
 class GameModelImpl: GameModel {
     private var item: AVAudioPlayer
     private var damage: AVAudioPlayer
-    private var motionManager:CMMotionManager
-    
-    private let motionQueue = OperationQueue()
     
     init() {
         var path = Bundle.main.path(forResource: "kan", ofType: "mp3")
@@ -39,9 +33,6 @@ class GameModelImpl: GameModel {
         catch{ fatalError() }
         item.numberOfLoops = 0
         item.prepareToPlay()
-        
-        motionManager = CMMotionManager()
-        
     }
     
     func isCollision(item1: ObjectPosition, item2: ObjectPosition, range: Float) -> Bool {
@@ -52,28 +43,6 @@ class GameModelImpl: GameModel {
         return distance < range ? true:false
     }
     
-    func getAcceldata(accelX: @escaping (Float) -> Void) {
-            if motionManager.isAccelerometerAvailable {
-                motionManager.accelerometerUpdateInterval = 0.1
-                
-                motionManager.startAccelerometerUpdates(
-                    to: motionQueue, // バックグラウンドのキューを使用
-                    withHandler: {(accelData: CMAccelerometerData?, errorOC: Error?) in
-                        // UIの更新はメインスレッドに戻す
-                        DispatchQueue.main.async {
-                            if let acceleration = accelData?.acceleration.x {
-                                accelX(Float(acceleration * 20))
-                            }
-                        }
-                    }
-                )
-            }
-        }
-
-    func stopAcceldata() {
-        motionManager.stopAccelerometerUpdates()
-    }
-
     func itemSoundPlay() {
         if item.isPlaying {
             item.currentTime = 0;

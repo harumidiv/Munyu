@@ -17,7 +17,8 @@ final class CaterpillarNode: SKNode {
         let r: CGFloat
     }
 
-    private(set) var stage: Int
+    private(set) var form: Form
+    var stage: Int { form.level }
     var element: Element? {
         didSet { if oldValue != element { refreshLooks() } }
     }
@@ -40,12 +41,12 @@ final class CaterpillarNode: SKNode {
 
     private static let chewSteps: [CGFloat] = [0, 0.15, 0.3, 0.45, 0.6, 1]
 
-    var spec: StageSpec { Stages.all[stage] }
+    var spec: StageSpec { form.size }
     /// 進む向きへの頭の傾き（時計回りが正）
     var tilt: CGFloat { max(-0.3, min(0.3, vx / 600)) }
 
-    init(stage: Int) {
-        self.stage = stage
+    init(form: Form = Forms.base) {
+        self.form = form
         super.init()
         aura.zPosition = -10
         aura.colorBlendFactor = 1
@@ -66,9 +67,9 @@ final class CaterpillarNode: SKNode {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func setStage(_ newStage: Int) {
-        guard newStage != stage else { return }
-        stage = newStage
+    func setForm(_ newForm: Form) {
+        guard newForm != form else { return }
+        form = newForm
         refreshLooks()
     }
 
@@ -117,6 +118,9 @@ final class CaterpillarNode: SKNode {
 
     // MARK: - Private
 
+    /// 羽があるのは魔法系のLv3だけ
+    private var hasWings: Bool { stage == 2 && form.line == .leaf }
+
     private func refreshLooks() {
         let P = spec
         segNodes.forEach { $0.removeFromParent() }
@@ -129,15 +133,21 @@ final class CaterpillarNode: SKNode {
         tailGlow.removeFromParent()
         if stage == 2, let last = segNodes.last {
             last.addChild(tailGlow)
-            tailGlow.color = element?.color ?? UIColor(hex: 0xffd23f)
+            tailGlow.color = element?.color ?? form.spot ?? UIColor(hex: 0xffd23f)
             tailGlow.size = CGSize(width: P.segR * 1.4, height: P.segR * 1.4)
         }
         aura.isHidden = stage < 1
-        aura.color = element?.color ?? UIColor(hex: 0xfff6a8)
-        aura.size = CGSize(width: P.headR * 4.8, height: P.headR * 4.8)
+        // Lv.8からは金色に光る
+        let golden = form.rank >= 8
+        aura.color = golden ? UIColor(hex: 0xffd23f) : element?.color ?? UIColor(hex: 0xfff6a8)
+        aura.size = CGSize(width: P.headR * (golden ? 6 : 4.8), height: P.headR * (golden ? 6 : 4.8))
+        aura.removeAllActions()
+        if golden {
+            aura.run(.repeatForever(.sequence([.fadeAlpha(to: 0.6, duration: 0.5), .fadeAlpha(to: 1, duration: 0.5)])))
+        }
         let wingArt = Art.imoWing(element: element)
         for w in wings {
-            w.isHidden = stage < 2
+            w.isHidden = !hasWings
             wingArt.apply(to: w)
         }
         layout()
@@ -149,11 +159,11 @@ final class CaterpillarNode: SKNode {
         for (i, s) in segs.enumerated() {
             let node = segNodes[i]
             let leg = sin(ph * 1.6 - CGFloat(i) * 1.3) > 0 ? 0 : 1
-            Art.imoSegment(stage: stage, legFrame: leg).apply(to: node)
+            Art.imoSegment(form: form, legFrame: leg).apply(to: node)
             node.position = CGPoint(x: s.dx, y: -s.dy)
             node.setScale(s.r / P.segR)
         }
-        if stage >= 2, let first = segs.first {
+        if hasWings, let first = segs.first {
             let flap = 1 + sin(time * 12) * 0.12
             for (i, w) in wings.enumerated() {
                 w.position = CGPoint(x: first.dx, y: -first.dy)
@@ -162,7 +172,7 @@ final class CaterpillarNode: SKNode {
         }
         let chewRaw: CGFloat = dizzy ? 0 : openTime > 0 ? 1 : (sin(time * 14) + 1) * 0.3
         let chew = Self.chewSteps.min(by: { abs($0 - chewRaw) < abs($1 - chewRaw) }) ?? 0
-        Art.imoHead(stage: stage, chew: chew, dizzy: dizzy, element: element).apply(to: head)
+        Art.imoHead(form: form, chew: chew, dizzy: dizzy, element: element).apply(to: head)
         head.zRotation = dizzy ? 0 : -tilt
     }
 }

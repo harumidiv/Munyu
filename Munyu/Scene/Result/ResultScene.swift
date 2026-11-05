@@ -26,7 +26,7 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
 
     init(size: CGSize, result: GameResult) {
         self.result = result
-        imo = CaterpillarNode(stage: result.stage)
+        imo = CaterpillarNode(form: Forms.find(result.form).withRank(result.stage))
         super.init(size: size)
         backgroundColor = UIColor(hex: 0x7fcf6a)
     }
@@ -88,10 +88,11 @@ class ResultScene: SKScene, UINavigationControllerDelegate {
         scoreLabel.position = CGPoint(x: 0, y: 4 * k)
         card.addChild(scoreLabel)
 
-        let stageName = Stages.all[result.stage].name
+        let stageName = "Lv.\(result.stage) " + Forms.find(result.form).withRank(result.stage).displayName
+        let areaName = Area(rawValue: result.area)?.name ?? ""
         let detail = result.isClear
-            ? "\(stageName)でカラス大王を倒した"
-            : "\(result.distance)m 地点・\(stageName)"
+            ? "\(stageName)で3体のボスを倒した"
+            : "\(areaName)・\(result.distance)m 地点・\(stageName)"
         let detailLabel = label(detail, 15)
         detailLabel.position = CGPoint(x: 0, y: -36 * k)
         card.addChild(detailLabel)

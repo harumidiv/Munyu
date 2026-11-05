@@ -7,13 +7,10 @@
 //
 
 import Foundation
-import CoreMotion
 
 protocol GamePresenter: AnyObject {
     func playItemsound()
     func playDamageSound()
-    func getAcceldata(accelX: @escaping (_ result: Float) -> Void)
-    func stopAcceldata()
 }
 
 class GamePresenterImpl: GamePresenter {
@@ -21,14 +18,6 @@ class GamePresenterImpl: GamePresenter {
 
     init(model: GameModel) {
         self.model = model
-    }
-
-    func getAcceldata(accelX: @escaping (_ result: Float) -> Void) {
-        model.getAcceldata(accelX: { accelX($0) })
-    }
-
-    func stopAcceldata() {
-        model.stopAcceldata()
     }
 
     func playItemsound() {

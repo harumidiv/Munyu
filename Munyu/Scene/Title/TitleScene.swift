@@ -16,13 +16,12 @@ class TitleScene: SKScene {
     private let difficulties: [Difficulty] = [.easy, .normal, .hard]
     // プレートの上に何秒いたらゲームを開始するか
     private let selectDuration: TimeInterval = 1.5
-    // 初期位置からこれだけ動いたら選択を受け付ける（傾けずに放置したまま開始しないため）
+    // 初期位置からこれだけ動いたら選択を受け付ける（触らずに放置したまま開始しないため）
     private lazy var moveThreshold: CGFloat = width / 10
 
     private let model: GameModel = GameModelImpl()
     private let selectionFeedback = UISelectionFeedbackGenerator()
 
-    private var acceleromateX: CGFloat = 0
     private var lastUpdateTime: TimeInterval = 0
     private var hasMoved = false
     private var currentIndex: Int?
@@ -32,7 +31,7 @@ class TitleScene: SKScene {
 
     private var k: CGFloat = 1
     private lazy var imoX: CGFloat = width / 2
-    private let imo = CaterpillarNode(stage: 0)
+    private let imo = CaterpillarNode()
 
     private lazy var plateSize = CGSize(width: width / 3.4, height: 64)
     private var plates: [SKShapeNode] = []
@@ -65,12 +64,6 @@ class TitleScene: SKScene {
         imo.reset(x: imoX / imo.xScale)
         addChild(imo)
 
-        model.getAcceldata(accelX: { [weak self] in self?.acceleromateX = CGFloat($0) })
-    }
-
-    override func willMove(from view: SKView) {
-        super.willMove(from: view)
-        model.stopAcceldata()
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -78,7 +71,7 @@ class TitleScene: SKScene {
         lastUpdateTime = currentTime
 
         if !isStarting {
-            moveImo(frameScale: CGFloat(deltaTime * 60))
+            moveImo()
             updateSelection(deltaTime: deltaTime)
         }
         imo.update(dt: CGFloat(deltaTime), x: imoX / imo.xScale)
@@ -124,14 +117,14 @@ class TitleScene: SKScene {
         card.addChild(title)
 
         let sub = SKLabelNode(fontNamed: GameConst.fontName)
-        sub.text = "食べて進化して、カラス大王をたおそう"
+        sub.text = "食べて進化して、3体のボスをたおそう"
         sub.fontSize = 14 * k
         sub.fontColor = Art.line
         sub.verticalAlignmentMode = .center
         sub.position = CGPoint(x: 0, y: -40 * k)
         card.addChild(sub)
 
-        hintLabel.text = "かたむけて芋虫をうごかそう"
+        hintLabel.text = "なぞって芋虫をうごかそう"
         hintLabel.fontSize = 18 * k
         hintLabel.fontColor = .white
         hintLabel.position = CGPoint(x: width / 2, y: height / 2.6)
@@ -178,9 +171,9 @@ class TitleScene: SKScene {
         }
     }
 
-    private func moveImo(frameScale: CGFloat) {
+    private func moveImo() {
         let halfWidth = 24 * k
-        imoX = min(max(imoX + acceleromateX * frameScale, halfWidth), width - halfWidth)
+        imoX = min(max(imoX, halfWidth), width - halfWidth)
 
         if !hasMoved && abs(imoX - width / 2) > moveThreshold {
             hasMoved = true
