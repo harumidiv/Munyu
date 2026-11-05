@@ -103,7 +103,7 @@ private final class EnemyShot {
 }
 
 /// bug は倒した虫（食べられる）
-private enum ItemKind { case kinoko, berry, iga, bug }
+private enum ItemKind { case kinoko, berry, iga, bug, power }
 
 private final class Item {
     let kind: ItemKind
@@ -115,9 +115,13 @@ private final class Item {
     /// 倒れた虫の傾き
     let tilt = CGFloat.random(in: -0.5...0.5)
 
-    init(kind: ItemKind, x: CGFloat, y: CGFloat, foe: FoeKind = .ant) {
-        self.kind = kind; self.x = x; self.y = y; self.foe = foe
+    /// 強化アイテムの中身
+    let option: GateOption?
+
+    init(kind: ItemKind, x: CGFloat, y: CGFloat, foe: FoeKind = .ant, option: GateOption? = nil) {
+        self.kind = kind; self.x = x; self.y = y; self.foe = foe; self.option = option
         switch kind {
+        case .power: art = Art.powerItem(option ?? .hp).sprite()
         case .kinoko: art = Art.kinoko.sprite()
         case .berry: art = Art.berry.sprite()
         case .iga: art = Art.igaBall.sprite()
@@ -141,33 +145,43 @@ private final class Item {
         node.addChild(art)
     }
 
-    var radius: CGFloat { kind == .iga || kind == .bug ? 12 : 11 }
+    var radius: CGFloat { kind == .power ? 13 : kind == .iga || kind == .bug ? 12 : 11 }
     /// 食べた時に増える進化ゲージ
     var xp: Int { kind == .bug && foe == .lady ? 2 : 1 }
 }
 
-private final class Gate {
-    var y: CGFloat = -50
-    let a: GateOption
-    let b: GateOption
-    var done = false
-    let node = SKNode()
-    let panels: [SKSpriteNode]
+private enum BlockKind { case rock, stump, chest }
 
-    init(a: GateOption, b: GateOption) {
-        self.a = a
-        self.b = b
-        let W = GameConst.width
-        let pa = Art.gatePanel(a).sprite()
-        pa.position = CGPoint(x: (58 + W / 2 - 6) / 2, y: 0)
-        let pb = Art.gatePanel(b).sprite()
-        pb.position = CGPoint(x: (W / 2 + 6 + W - 58) / 2, y: 0)
-        panels = [pa, pb]
-        node.addChild(pa)
-        node.addChild(pb)
-        let frame = Art.gateFrame.sprite()
-        frame.zPosition = 1
-        node.addChild(frame)
+/// 道に並ぶブロック。岩は攻撃で壊れ、切り株は壊れない、宝箱は体当たりか攻撃で開く
+private final class Block {
+    let kind: BlockKind
+    var x: CGFloat, y: CGFloat
+    var hp: CGFloat
+    let maxHP: CGFloat
+    var hit: CGFloat = 0
+    var dead = false
+    /// 中身（宝箱は必ず入っている）
+    var content: GateOption?
+    let half: CGFloat = 18
+    let node: SKSpriteNode
+
+    init(kind: BlockKind, x: CGFloat, y: CGFloat) {
+        self.kind = kind; self.x = x; self.y = y
+        hp = kind == .rock ? 4 : kind == .chest ? 9 : .infinity
+        maxHP = hp
+        switch kind {
+        case .rock: node = Art.rock(crack: 0).sprite()
+        case .stump: node = Art.stump.sprite()
+        case .chest: node = Art.chest.sprite()
+        }
+        node.color = .white
+    }
+
+    var breakable: Bool { kind != .stump }
+
+    func overlaps(_ cx: CGFloat, _ cy: CGFloat, _ r: CGFloat) -> Bool {
+        let nx = max(x - half, min(cx, x + half)), ny = max(y - half, min(cy, y + half))
+        return (cx - nx) * (cx - nx) + (cy - ny) * (cy - ny) < r * r
     }
 }
 
@@ -237,7 +251,7 @@ class GameScene: SKScene {
 
     private let world = SKNode()
     private let groundLayer = SKNode()
-    private let gateLayer = SKNode()
+    private let blockLayer = SKNode()
     private let itemLayer = SKNode()
     private let foeLayer = SKNode()
     private let bossLayer = SKNode()
@@ -262,6 +276,9 @@ class GameScene: SKScene {
     private var px: CGFloat = 180
     private var py: CGFloat = 490
     private var tx: CGFloat = 180
+    private var ty: CGFloat = 490
+    /// 押しつぶされた直後、ブロックをすり抜けて逃げられる時間
+    private var ghost: CGFloat = 0
     private var hp = 5
     private var maxHp = 5
     private var xp = 0
@@ -280,16 +297,20 @@ class GameScene: SKScene {
     private var mouth = Circle(x: 0, y: 0, r: 0)
     private var accelX: CGFloat = 0
     private let tiltGain: CGFloat = 1.6
-    private var dragStart: (x: CGFloat, tx: CGFloat)?
+    private var dragStart: (x: CGFloat, y: CGFloat, tx: CGFloat, ty: CGFloat)?
 
     // 物
     private var foes: [Foe] = []
     private var shots: [Shot] = []
     private var enemyShots: [EnemyShot] = []
     private var items: [Item] = []
-    private var gates: [Gate] = []
+    private var blocks: [Block] = []
+    /// 次のブロックの列までの残り（地面のスクロール量）
+    private var rowTimer: CGFloat = 200
+    private var lastRowWasWall = false
+    private var nextChestDist: CGFloat = 120
+    private var chestCount = 0
     private var boss: Boss?
-    private var gateIndex = 0
     private var spawnFoeTimer: CGFloat = 1.2
     private var spawnKinokoTimer: CGFloat = 1.5
     private var spawnBerryTimer: CGFloat = 9
@@ -334,10 +355,11 @@ class GameScene: SKScene {
         bottomInset = view.safeAreaInsets.bottom / k
         Art.pixelScale = k * view.contentScaleFactor
         py = H - 150 - bottomInset
+        ty = py
 
         world.setScale(k)
         addChild(world)
-        let layers = [groundLayer, gateLayer, itemLayer, foeLayer, bossLayer, shotLayer, playerLayer, fxLayer, hudLayer]
+        let layers = [groundLayer, blockLayer, itemLayer, foeLayer, bossLayer, shotLayer, playerLayer, fxLayer, hudLayer]
         for (i, layer) in layers.enumerated() {
             layer.zPosition = CGFloat(i) * 10
             world.addChild(layer)
@@ -370,13 +392,18 @@ class GameScene: SKScene {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let p = touches.first?.location(in: self) else { return }
-        dragStart = (p.x / k, tx)
+        dragStart = (p.x / k, H - p.y / k, tx, ty)
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let start = dragStart, let p = touches.first?.location(in: self) else { return }
         tx = clamp(start.tx + (p.x / k - start.x) * 1.6, 22, W - 22)
+        ty = clamp(start.ty + (H - p.y / k - start.y) * 1.6, minY, maxY)
     }
+
+    /// 頭が動ける上下の範囲
+    private var minY: CGFloat { topInset + 130 }
+    private var maxY: CGFloat { H - bottomInset - 75 }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) { dragStart = nil }
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) { dragStart = nil }
@@ -395,14 +422,17 @@ class GameScene: SKScene {
             dt *= 0.3
         }
 
+        let groundV = mode == .play ? GameConst.groundSpeed : 0
         // 傾きは元の1.6倍の速さで動かし、目標位置にもすばやく追いつく
         tx = clamp(tx + accelX * tiltGain / k * dt * 60, 22, W - 22)
         px += (tx - px) * min(1, dt * 22)
+        py += (ty - py) * min(1, dt * 22)
         invincible = max(0, invincible - dt)
+        ghost = max(0, ghost - dt)
+        updateBlocks(dt, groundV: groundV)
         imo.update(dt: dt, x: px)
         updateHitbox()
 
-        let groundV = mode == .play ? GameConst.groundSpeed : 0
         scroll += groundV * dt
         if mode == .play {
             dist += GameConst.speed * dt
@@ -431,11 +461,14 @@ class GameScene: SKScene {
             s.life -= dt
             s.x += s.vx * dt
             s.y += s.vy * dt
+            if !s.dead, let b = blocks.first(where: { !$0.dead && $0.overlaps(s.x, s.y, s.r) }) {
+                s.dead = true
+                hitBlock(b, s.dmg, at: CGPoint(x: s.x, y: s.y))
+            }
         }
 
         updateFoes(dt, groundV: groundV)
         updateItems(dt, groundV: groundV)
-        updateGates(dt, groundV: groundV)
         updateBoss(dt)
         updateEnemyShots(dt)
 
@@ -458,8 +491,7 @@ class GameScene: SKScene {
             if spawnBerryTimer <= 0 { addItem(.berry, x: .random(in: 56...(W - 56)), y: -20); spawnBerryTimer = .random(in: 7...11) }
         }
         spawnIgaTimer -= dt
-        if spawnIgaTimer <= 0 { addItem(.iga, x: .random(in: 56...(W - 56)), y: -20); spawnIgaTimer = .random(in: 2.5...4.5) }
-        if gateIndex < GameConst.gateAt.count && dist >= GameConst.gateAt[gateIndex] { makeGate() }
+        if spawnIgaTimer <= 0 { addItem(.iga, x: .random(in: 56...(W - 56)), y: -20); spawnIgaTimer = .random(in: 4...7) }
     }
 
     private var isInvincible: Bool { invincible > 0 }
@@ -525,7 +557,8 @@ class GameScene: SKScene {
             let eat = edible && (dist2(it.x, it.y, mouth.x, mouth.y) < pow2(mouth.r + it.radius)
                                  || dist2(it.x, it.y, px, py) < pow2(hr * 0.7 + it.radius))
             let bump = it.kind == .iga && !isInvincible && hitBody(it.x, it.y, it.radius)
-            guard eat || bump else { continue }
+            let grab = it.kind == .power && hitBody(it.x, it.y, it.radius)
+            guard eat || bump || grab else { continue }
             it.dead = true
             switch it.kind {
             case .kinoko:
@@ -545,6 +578,10 @@ class GameScene: SKScene {
             case .iga:
                 burst(it.x, it.y, UIColor(hex: 0xb07a3c), 12)
                 hurt("イガグリ")
+            case .power:
+                burst(it.x, it.y, it.option?.color ?? .white, 12)
+                ring(it.x, it.y, it.option?.color ?? .white, 50, 0.4)
+                if let o = it.option { apply(o) }
             case .bug:
                 burst(mouth.x, mouth.y, UIColor(hex: 0xffe0b0), 8)
                 pop("+\(it.xp)", it.x, it.y - 10, UIColor(hex: 0xfff6a8))
@@ -556,23 +593,6 @@ class GameScene: SKScene {
         items.removeAll { it in
             let out = it.dead || it.y > H + 30
             if out { it.node.removeFromParent() }
-            return out
-        }
-    }
-
-    private func updateGates(_ dt: CGFloat, groundV: CGFloat) {
-        for g in gates {
-            g.y += groundV * dt
-            if !g.done && g.y >= py {
-                g.done = true
-                let pickLeft = px < W / 2
-                g.panels[pickLeft ? 1 : 0].alpha = 0.25
-                apply(pickLeft ? g.a : g.b)
-            }
-        }
-        gates.removeAll { g in
-            let out = g.y > H + 70
-            if out { g.node.removeFromParent() }
             return out
         }
     }
@@ -700,8 +720,8 @@ class GameScene: SKScene {
         return f
     }
 
-    private func addItem(_ kind: ItemKind, x: CGFloat, y: CGFloat, foe: FoeKind = .ant) {
-        let it = Item(kind: kind, x: x, y: y, foe: foe)
+    private func addItem(_ kind: ItemKind, x: CGFloat, y: CGFloat, foe: FoeKind = .ant, option: GateOption? = nil) {
+        let it = Item(kind: kind, x: x, y: y, foe: foe, option: option)
         items.append(it)
         itemLayer.addChild(it.node)
     }
@@ -737,28 +757,132 @@ class GameScene: SKScene {
         shotLayer.addChild(e.node)
     }
 
-    private func makeGate() {
-        var pool = GateOption.all
-        var a: GateOption, b: GateOption
-        if gateIndex == 0 {
-            a = .magic(.fire)
-            b = .magic(.thunder)
-        } else {
-            if let e = element { pool.removeAll { $0 == .magic(e) } }
-            pool.removeAll { $0 == .bullet(shotType) }
-            if gateIndex == 1 {
-                // 2つ目のゲートは弾の種類どうしで選ぶ
-                pool = pool.filter { if case .bullet = $0 { return true } else { return false } }
-            }
-            a = pool.remove(at: Int.random(in: 0..<pool.count))
-            if a.element != nil { pool.removeAll { $0.element != nil } }
-            b = pool.randomElement() ?? .hp
+    // MARK: - Blocks
+
+    private func updateBlocks(_ dt: CGFloat, groundV: CGFloat) {
+        for b in blocks {
+            b.y += groundV * dt
+            b.hit -= dt
         }
-        if Bool.random() { swap(&a, &b) }
-        let g = Gate(a: a, b: b)
-        gates.append(g)
-        gateLayer.addChild(g.node)
-        gateIndex += 1
+        if mode == .play && dist < GameConst.bossAt - 80 {
+            rowTimer -= groundV * dt
+            if rowTimer <= 0 {
+                spawnBlockRow()
+                rowTimer += 76
+            }
+        }
+        // 頭がブロックにめり込まないよう押し出す。宝箱は体当たりで開く
+        let r = Stages.all[stage].headR * 0.9
+        if ghost <= 0 {
+            for _ in 0..<2 {
+                for b in blocks where !b.dead && b.overlaps(px, py, r) {
+                    if b.kind == .chest {
+                        breakBlock(b)
+                        continue
+                    }
+                    let nx = clamp(px, b.x - b.half, b.x + b.half), ny = clamp(py, b.y - b.half, b.y + b.half)
+                    let dx = px - nx, dy = py - ny
+                    let d = sqrt(dx * dx + dy * dy)
+                    if d > 0.001 {
+                        px += dx / d * (r - d)
+                        py += dy / d * (r - d)
+                    } else {
+                        py = b.y + b.half + r
+                    }
+                }
+            }
+            px = clamp(px, 22, W - 22)
+        }
+        // 画面の下まで押し出されたらダメージ。少しの間すり抜けて上に逃げられる
+        if py > maxY + 25 {
+            hurt("押しつぶされた", at: CGPoint(x: px, y: maxY - 20))
+            ghost = 1.4
+            ty = maxY - 60
+        }
+        blocks.removeAll { b in
+            let out = b.dead || b.y > H + 40
+            if out { b.node.removeFromParent() }
+            return out
+        }
+    }
+
+    /// 道の幅に6列。必ずどこかに通れるすき間を残す
+    private func spawnBlockRow() {
+        let cols: [CGFloat] = (0..<6).map { 80 + CGFloat($0) * 40 }
+        let y: CGFloat = -24
+        if dist >= nextChestDist {
+            let i = Int.random(in: 0..<6)
+            addBlock(.chest, x: cols[i], y: y)
+            nextChestDist += 260
+            lastRowWasWall = false
+            return
+        }
+        let r = CGFloat.random(in: 0..<1)
+        if lastRowWasWall || r < 0.5 {
+            lastRowWasWall = false
+            return
+        }
+        if r < 0.78 {
+            for i in Array(0..<6).shuffled().prefix(Int.random(in: 1...2)) { addBlock(.rock, x: cols[i], y: y) }
+        } else if r < 0.92 {
+            // 横一列の壁。1〜2列だけ空ける
+            let gap = Int.random(in: 0..<6)
+            var gaps: Set<Int> = [gap]
+            if Bool.random() { gaps.insert(gap == 5 ? 4 : gap + 1) }
+            for i in 0..<6 where !gaps.contains(i) { addBlock(Bool.random() ? .stump : .rock, x: cols[i], y: y) }
+            lastRowWasWall = true
+        } else {
+            let i = Int.random(in: 0..<5)
+            addBlock(.stump, x: cols[i], y: y)
+            addBlock(.stump, x: cols[i + 1], y: y)
+        }
+    }
+
+    private func addBlock(_ kind: BlockKind, x: CGFloat, y: CGFloat) {
+        let b = Block(kind: kind, x: x, y: y)
+        if kind == .chest {
+            // 最初の宝箱は魔法の属性、それ以降はなんでも
+            b.content = chestCount == 0 ? .magic(Element.allCases.randomElement() ?? .fire) : randomPowerOption()
+            chestCount += 1
+        }
+        blocks.append(b)
+        blockLayer.addChild(b.node)
+    }
+
+    private func hitBlock(_ b: Block, _ dmg: CGFloat, at p: CGPoint?) {
+        if let p { burst(p.x, p.y, b.breakable ? UIColor(hex: 0xc9d1c0) : UIColor(hex: 0xb98a4e), 2) }
+        guard b.breakable else { return }
+        b.hp -= dmg
+        b.hit = 0.06
+        if b.hp <= 0 { breakBlock(b) }
+    }
+
+    /// ブロックを壊す。岩はときどき、宝箱は必ず中身が出る
+    private func breakBlock(_ b: Block) {
+        guard !b.dead else { return }
+        b.dead = true
+        puff(b.x, b.y)
+        burst(b.x, b.y, b.kind == .chest ? UIColor(hex: 0xffd23f) : UIColor(hex: 0xaab4a1), 10)
+        if let o = b.content {
+            addItem(.power, x: b.x, y: b.y, option: o)
+            return
+        }
+        let r = CGFloat.random(in: 0..<1)
+        if r < 0.3 {
+            addItem(.kinoko, x: b.x, y: b.y)
+        } else if r < 0.42 {
+            addItem(.power, x: b.x, y: b.y, option: randomPowerOption())
+        } else if r < 0.5 && stage >= 1 {
+            addItem(.berry, x: b.x, y: b.y)
+        }
+    }
+
+    /// 今持っている属性・弾の種類は出さない
+    private func randomPowerOption() -> GateOption {
+        var pool = GateOption.all
+        if let e = element { pool.removeAll { $0 == .magic(e) } }
+        pool.removeAll { $0 == .bullet(shotType) }
+        return pool.randomElement() ?? .hp
     }
 
     private func apply(_ o: GateOption) {
@@ -802,8 +926,8 @@ class GameScene: SKScene {
         dist = GameConst.bossAt
         foes.forEach { $0.node.removeFromParent() }
         foes.removeAll()
-        gates.forEach { $0.node.removeFromParent() }
-        gates.removeAll()
+        blocks.forEach { $0.node.removeFromParent() }
+        blocks.removeAll()
         items.removeAll { it in
             if it.kind == .iga { it.node.removeFromParent() }
             return it.kind == .iga
@@ -970,6 +1094,9 @@ class GameScene: SKScene {
             b.hp -= dps * dt
             b.hit = 0.05
         }
+        for b in blocks where !b.dead && b.breakable && inCone(b.x, b.y, b.half) {
+            hitBlock(b, dps * dt, at: nil)
+        }
     }
 
     /// 氷：5本の氷のつぶてを扇形に飛ばす。当たった敵は遅くなる
@@ -1102,9 +1229,17 @@ class GameScene: SKScene {
                 it.art.setScale(1 + sin(t * 6) * 0.05)
             case .iga: it.art.zRotation = -(t * 1.2 + it.x)
             case .bug: it.art.zRotation = it.tilt + sin(t * 9 + it.x) * 0.08
+            case .power: it.art.setScale(1 + sin(t * 7) * 0.08)
             }
         }
-        for g in gates { g.node.position = P(0, g.y) }
+        for b in blocks {
+            b.node.position = P(b.x, b.y)
+            if b.kind == .rock {
+                let ratio = b.hp / b.maxHP
+                Art.rock(crack: ratio > 0.66 ? 0 : ratio > 0.33 ? 1 : 2).apply(to: b.node)
+            }
+            b.node.colorBlendFactor = b.hit > 0 ? 0.5 : 0
+        }
         for s in shots { s.node.position = P(s.x, s.y) }
         for e in enemyShots { e.node.position = P(e.x, e.y) }
         if let b = boss {

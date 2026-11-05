@@ -624,29 +624,68 @@ extension Art {
     }
 }
 
-// MARK: - 強化ゲート・背景
+// MARK: - ブロック・強化アイテム・背景
 
 extension Art {
-    /// ゲートの片側パネル
-    static func gatePanel(_ o: GateOption) -> ArtTexture {
-        make("gate-\(o.label)", CGRect(x: -60, y: -30, width: 120, height: 62)) { c in
-            let col = o.color
-            c.linear(RR(-58, -28, 116, 56, 10), [col.withAlphaComponent(0.67), col.withAlphaComponent(0.13)], [0, 1],
-                     from: CGPoint(x: 0, y: -28), to: CGPoint(x: 0, y: 28))
-            c.fs(RR(-50, -20, 100, 30, 8), Art.cream, 2.4)
-            drawText(o.label, in: CGRect(x: -50, y: -20, width: 100, height: 30), font: Art.font(15), color: line)
-            drawText(o.sub, in: CGRect(x: -58, y: 13, width: 116, height: 16), font: Art.font(11), color: .white, stroke: UIColor(white: 0, alpha: 0.5))
+    /// 壊せる岩。crack が大きいほどひびが入る(0〜2)
+    static func rock(crack: Int) -> ArtTexture {
+        make("rock\(crack)", CGRect(x: -24, y: -24, width: 48, height: 50)) { c in
+            c.blob(3, 15, 19, 6)
+            let body = shape { p in
+                p.mv(-17, -6); p.qd(-18, -17, -6, -18); p.qd(6, -20, 14, -14); p.qd(20, -8, 18, 4)
+                p.qd(17, 16, 4, 17); p.qd(-10, 19, -16, 10); p.qd(-20, 2, -17, -6); p.closeSubpath()
+            }
+            c.radial(body, [UIColor(hex: 0xd3dacb), UIColor(hex: 0xaab4a1), UIColor(hex: 0x8a957f)], [0, 0.5, 1],
+                     from: CGPoint(x: -6, y: -8), 2, to: .zero, 22)
+            c.stroke(body)
+            c.fill(E(-7, -9, 5, 3, -0.5), white(0.5))
+            c.fill(C(7, 7, 2.2), UIColor(hex: 0x8a957f))
+            c.fill(C(-6, 9, 1.6), UIColor(hex: 0x8a957f))
+            if crack >= 1 { c.stroke(shape { p in p.mv(-2, -15); p.ln(1, -7); p.ln(-3, -1); p.ln(2, 6) }, 1.8) }
+            if crack >= 2 {
+                c.stroke(shape { p in p.mv(9, -11); p.ln(4, -3); p.ln(11, 4) }, 1.8)
+                c.stroke(shape { p in p.mv(-13, 3); p.ln(-6, 8); p.ln(-8, 13) }, 1.8)
+            }
         }
     }
 
-    /// ゲートの木の柱と横木（横は画面幅ぶん）
-    static var gateFrame: ArtTexture {
-        let W = GameConst.width
-        return make("gateFrame", CGRect(x: 40, y: -50, width: W - 80, height: 90)) { c in
-            let wood = UIColor(hex: 0xa86a37)
-            for x in [50, W / 2 - 4, W - 58] { c.fs(RR(x, -36, 8, 70, 3), wood, 2.2) }
-            c.fs(RR(46, -40, W - 92, 9, 4), wood, 2.2)
-            for x in [54, W / 2, W - 54] { c.fs(C(x, -42, 5), UIColor(hex: 0x6fc45a), 1.6) }
+    /// 壊せない切り株
+    static var stump: ArtTexture {
+        make("stump", CGRect(x: -24, y: -24, width: 48, height: 50)) { c in
+            c.blob(3, 15, 19, 6)
+            c.fs(C(0, 0, 19), UIColor(hex: 0x8a5a2b))
+            c.fill(C(0, 0, 14), UIColor(hex: 0xe0b073))
+            c.stroke(C(0, 0, 10), 1.2, UIColor(hex: 0xb98a4e))
+            c.stroke(C(0, 0, 5.5), 1.2, UIColor(hex: 0xb98a4e))
+            c.stroke(shape { p in p.mv(1, -14); p.ln(3, -6) }, 1.4, UIColor(hex: 0x8a5a2b))
+            c.fs(E(-12, -13, 7, 4.5, -0.4), UIColor(hex: 0x6fc45a), 1.6)
+        }
+    }
+
+    /// 宝箱。体当たりか攻撃で開く
+    static var chest: ArtTexture {
+        make("chest", CGRect(x: -24, y: -24, width: 48, height: 50)) { c in
+            c.blob(3, 15, 19, 6)
+            c.fs(RR(-18, -14, 36, 28, 5), UIColor(hex: 0xc9813a))
+            c.stroke(shape { p in p.mv(-18, -3); p.ln(18, -3) }, 2)
+            c.fs(RR(-4, -14, 8, 28, 1.5), UIColor(hex: 0xffd23f), 1.6)
+            c.fs(RR(-5, -7, 10, 9, 2), UIColor(hex: 0xffe680), 1.6)
+            c.fill(C(0, -2.5, 1.5), line)
+            let sp = shape { p in p.mv(14, -21); p.qd(15, -16, 19, -15); p.qd(15, -14, 14, -9); p.qd(13, -14, 9, -15); p.qd(13, -16, 14, -21) }
+            c.fill(sp, .white)
+        }
+    }
+
+    /// 強化アイテム。色と1文字で中身が分かる
+    static func powerItem(_ o: GateOption) -> ArtTexture {
+        make("power-\(o.label)", CGRect(x: -18, y: -18, width: 36, height: 36)) { c in
+            c.saveGState()
+            c.setShadow(offset: .zero, blur: 8, color: o.color.cgColor)
+            c.fill(C(0, 0, 13), o.color)
+            c.restoreGState()
+            c.stroke(C(0, 0, 13), 2.4)
+            c.stroke(C(0, 0, 10), 1.4, white(0.75))
+            drawText(o.short, in: CGRect(x: -12, y: -11, width: 24, height: 22), font: Art.font(13), color: line)
         }
     }
 

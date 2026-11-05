@@ -16,8 +16,6 @@ enum GameConst {
     static let speed: CGFloat = 24
     /// 地面のスクロール速度(論理px/s)
     static let groundSpeed: CGFloat = 24 * 5.3
-    /// 強化ゲートが出る距離(m)
-    static let gateAt: [CGFloat] = [380, 640, 900, 1160]
     static let fontName = "HiraMaruProN-W4"
 }
 
@@ -90,7 +88,7 @@ enum ShotType: Equatable, CaseIterable {
     }
 }
 
-/// 強化ゲートの選択肢
+/// 強化アイテムの種類（ブロックや宝箱から出る）
 enum GateOption: Equatable {
     case rate, shot, power, hp
     case bullet(ShotType)
@@ -123,6 +121,21 @@ enum GateOption: Equatable {
         case .magic(.fire): return "炎を吐く"
         case .magic(.ice): return "氷のつぶて"
         case .magic(.thunder): return "落雷"
+        }
+    }
+
+    /// アイテムに書く1文字
+    var short: String {
+        switch self {
+        case .rate: return "連"
+        case .shot: return "弾"
+        case .power: return "攻"
+        case .hp: return "♥"
+        case .bullet(.leaf): return "葉"
+        case .bullet(.spread): return "拡"
+        case .bullet(.homing): return "追"
+        case .bullet(.pierce): return "貫"
+        case .magic(let e): return e.name
         }
     }
 
