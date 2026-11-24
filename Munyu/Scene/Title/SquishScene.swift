@@ -544,101 +544,101 @@ final class SquishScene: SKScene {
         }
     }
 
-private func handlePanelAction(_ action: String) {
-switch action {
-case "reward":
-let shown = RewardedAdManager.shared.show { [weak self] earned in
-guard let self else { return}
-if earned {
-self.rewardUsed = true
-self.panel?.removeFromParent()
-self.panel = nil
-self.panelButtons = []
-self.timeLeft = 10
-self.lastWholeSecond = 99
-self.phase =.playing
-} else {
-self.finalize()
-}
-}
-if!shown { finalize()}
-case "result":
-finalize()
-case "replay":
-InterstitialAdManager.shared.showIfNeeded { [weak self] in
-guard let self else { return}
-let scene = SquishScene(size: self.size)
-scene.scaleMode = self.scaleMode
-self.view?.presentScene(scene, transition:.crossFade(withDuration: 0.3))
-}
-case "share":
-let text = "『むにゅタッチ』で むにゅ を \(points) 回つぶした！最大\(maxCombo)コンボ https://apps.apple.com/jp/app/id1461761608 #むにゅタッチ"
-NotificationCenter.default.post(name:.shareMunyuResult, object: text)
-case "home":
-let scene = TitleScene(size: size)
-scene.scaleMode = scaleMode
-view?.presentScene(scene, transition:.crossFade(withDuration: 0.3))
-default:
-break
-}
-}
+    private func handlePanelAction(_ action: String) {
+        switch action {
+        case "reward":
+            let shown = RewardedAdManager.shared.show { [weak self] earned in
+                guard let self else { return }
+                if earned {
+                    self.rewardUsed = true
+                    self.panel?.removeFromParent()
+                    self.panel = nil
+                    self.panelButtons = []
+                    self.timeLeft = 10
+                    self.lastWholeSecond = 99
+                    self.phase = .playing
+                } else {
+                    self.finalize()
+                }
+            }
+            if !shown { finalize() }
+        case "result":
+            finalize()
+        case "replay":
+            InterstitialAdManager.shared.showIfNeeded { [weak self] in
+                guard let self else { return }
+                let scene = SquishScene(size: self.size)
+                scene.scaleMode = self.scaleMode
+                self.view?.presentScene(scene, transition: .crossFade(withDuration: 0.3))
+            }
+        case "share":
+            let text = "『むにゅタッチ』で むにゅ を \(points) 回つぶした！【\(Self.diagnosis(for: points))】最大\(maxCombo)コンボ https://apps.apple.com/jp/app/id1461761608 #むにゅタッチ"
+            NotificationCenter.default.post(name: .shareMunyuResult, object: text)
+        case "home":
+            let scene = TitleScene(size: size)
+            scene.scaleMode = scaleMode
+            view?.presentScene(scene, transition: .crossFade(withDuration: 0.3))
+        default:
+            break
+        }
+    }
 
-// MARK: - Panel / Button builders
+    // MARK: - Panel / Button builders
 
-private func makePanel(height: CGFloat) -> SKNode {
-let group = SKNode()
-group.position = P(W / 2, H / 2)
-group.zPosition = 41
-let dim = SKShapeNode(rectOf: CGSize(width: W, height: H))
-dim.fillColor = UIColor(white: 0, alpha: 0.25)
-dim.strokeColor =.clear
-dim.zPosition = -1
-group.addChild(dim)
-let card = SKShapeNode(rectOf: CGSize(width: 300, height: height), cornerRadius: 24)
-card.fillColor = Art.cream.withAlphaComponent(0.97)
-card.strokeColor = Art.line
-card.lineWidth = 3
-group.addChild(card)
-return group
-}
+    private func makePanel(height: CGFloat) -> SKNode {
+        let group = SKNode()
+        group.position = P(W / 2, H / 2)
+        group.zPosition = 41
+        let dim = SKShapeNode(rectOf: CGSize(width: W, height: H))
+        dim.fillColor = UIColor(white: 0, alpha: 0.25)
+        dim.strokeColor = .clear
+        dim.zPosition = -1
+        group.addChild(dim)
+        let card = SKShapeNode(rectOf: CGSize(width: 300, height: height), cornerRadius: 24)
+        card.fillColor = Art.cream.withAlphaComponent(0.97)
+        card.strokeColor = Art.line
+        card.lineWidth = 3
+        group.addChild(card)
+        return group
+    }
 
-private func button(_ text: String, color: UIColor, shadow: UIColor, width: CGFloat) -> SKNode {
-let group = SKNode()
-let h: CGFloat = 50
-let base = SKShapeNode(rectOf: CGSize(width: width, height: h), cornerRadius: 16)
-base.fillColor = shadow
-base.strokeColor =.clear
-base.position = CGPoint(x: 0, y: -4)
-group.addChild(base)
-let face = SKShapeNode(rectOf: CGSize(width: width, height: h), cornerRadius: 16)
-face.fillColor = color
-face.strokeColor = Art.line
-face.lineWidth = 2.4
-group.addChild(face)
-group.addChild(label(text, 17))
-return group
-}
+    private func button(_ text: String, color: UIColor, shadow: UIColor, width: CGFloat) -> SKNode {
+        let group = SKNode()
+        let h: CGFloat = 50
+        let base = SKShapeNode(rectOf: CGSize(width: width, height: h), cornerRadius: 16)
+        base.fillColor = shadow
+        base.strokeColor = .clear
+        base.position = CGPoint(x: 0, y: -4)
+        group.addChild(base)
+        let face = SKShapeNode(rectOf: CGSize(width: width, height: h), cornerRadius: 16)
+        face.fillColor = color
+        face.strokeColor = Art.line
+        face.lineWidth = 2.4
+        group.addChild(face)
+        group.addChild(label(text, 17))
+        return group
+    }
 
-private func press(_ node: SKNode) {
-node.run(.sequence([.scale(to: 0.94, duration: 0.06),.scale(to: 1, duration: 0.08)]))
-}
+    private func press(_ node: SKNode) {
+        node.run(.sequence([.scale(to: 0.94, duration: 0.06), .scale(to: 1, duration: 0.08)]))
+    }
 
-private func shrink(_ node: SKLabelNode, maxWidth: CGFloat) {
-if node.frame.width > maxWidth { node.setScale(maxWidth / node.frame.width)}
-}
+    private func shrink(_ node: SKLabelNode, maxWidth: CGFloat) {
+        if node.frame.width > maxWidth { node.setScale(maxWidth / node.frame.width) }
+    }
 
-// MARK: - Helpers
+    // MARK: - Helpers
 
-/// 論理座標（y下向き）→ world 内の座標
-private func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: H - y)}
+    /// 論理座標（y下向き）→ world 内の座標
+    private func P(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: H - y) }
 
-private func label(_ text: String, _ size: CGFloat) -> SKLabelNode {
-let node = SKLabelNode(fontNamed: GameConst.fontName)
-node.text = text
-node.fontSize = size
-node.fontColor = Art.line
-node.verticalAlignmentMode =.center
-node.horizontalAlignmentMode =.center
-return node
-}
+    private func label(_ text: String, _ size: CGFloat) -> SKLabelNode {
+        let node = SKLabelNode(fontNamed: GameConst.fontName)
+        node.text = text
+        node.fontSize = size
+        node.fontColor = Art.line
+        node.verticalAlignmentMode = .center
+        node.horizontalAlignmentMode = .center
+        return node
+    }
 }
