@@ -45,12 +45,14 @@ struct ContentView: View {
                 isShowBestScore.toggle()
             }
             .onReceive(NotificationCenter.default.publisher(for: .shareMunyuResult)) { note in
-                if let text = note.object as? String {
-                    sharePayload = SharePayload(text: text)
+                if let image = note.object as? UIImage {
+                    sharePayload = SharePayload(text: nil, image: image)
+                } else if let text = note.object as? String {
+                    sharePayload = SharePayload(text: text, image: nil)
                 }
             }
             .sheet(item: $sharePayload) { payload in
-                ActivityView(items: [payload.text])
+                ActivityView(items: payload.items)
             }
             .sheet(isPresented: $isShowingGameCenterAuth, onDismiss: {
                 self.gameCenterAuthVC = nil
@@ -108,7 +110,13 @@ struct GameCenterAuthView: UIViewControllerRepresentable {
 
 struct SharePayload: Identifiable {
     let id = UUID()
-    let text: String
+    let text: String?
+    let image: UIImage?
+
+    var items: [Any] {
+        if let image { return [image] }
+        return [text ?? ""]
+    }
 }
 
 struct ActivityView: UIViewControllerRepresentable {

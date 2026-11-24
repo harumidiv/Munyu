@@ -13,6 +13,20 @@ import UIKit
 
 final class SquishScene: SKScene {
 
+    enum Mode {
+        case free      // 時間制限なしのあそび場（つぶす・のばす・ならす）
+        case challenge // 30秒チャレンジ
+    }
+
+    let mode: Mode
+
+    init(size: CGSize, mode: Mode) {
+        self.mode = mode
+        super.init(size: size)
+    }
+
+    required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
     // MARK: - Phase
 
     private enum Phase {
@@ -54,6 +68,23 @@ final class SquishScene: SKScene {
     private var lastWholeSecond = 99
     private var lastHapticTime: TimeInterval = 0
 
+    // フリーあそび用
+    private var totalCount = UserDefaults.standard.integer(forKey: "munyu.touch.total")
+    private var skinIndex = UserDefaults.standard.integer(forKey: "munyu.touch.skin")
+    private var noteStep = 0
+    private var lastSquishAt: TimeInterval = 0
+    private var isDragging = false
+    private var stretchX: CGFloat = 0
+    private var stretchY: CGFloat = 0
+    private var stretchFactor: CGFloat = 0
+    private var wobbling = false
+    private var wobbleTime: CGFloat = 0
+    private var freeButtons: [(node: SKNode, action: String)] = []
+    private let noteLabel = SKLabelNode(fontNamed: GameConst.fontName)
+    private let totalLabel = SKLabelNode(fontNamed: GameConst.fontName)
+    private static let noteRates: [Float] = [1.0, 1.122, 1.26, 1.335, 1.498, 1.682, 1.782, 2.0]
+    private static let noteNames = ["ド", "レ", "ミ", "ファ", "ソ", "ラ", "シ", "ド"]
+
     private let timeBarFill = SKSpriteNode()
     private let timeLabel = SKLabelNode(fontNamed: GameConst.fontName)
     private let scoreLabel = SKLabelNode(fontNamed: GameConst.fontName)
@@ -82,7 +113,11 @@ final class SquishScene: SKScene {
         setupBackground()
         setupBlob()
         setupHUD()
-        setupReady()
+        if mode == .free {
+            setupFree()
+        } else {
+            setupReady()
+        }
         lightHaptic.prepare()
         mediumHaptic.prepare()
         softHaptic.prepare()
@@ -90,6 +125,7 @@ final class SquishScene: SKScene {
 
     override func willMove(from view: SKView) {
         super.willMove(from: view)
+        UserDefaults.standard.set(totalCount, forKey: "munyu.touch.total")
         NotificationCenter.default.post(name: .hideBannerAd, object: nil)
     }
 
@@ -122,6 +158,7 @@ final class SquishScene: SKScene {
         back.strokeColor = .clear
         back.position = P(W / 2, barY)
         back.zPosition = 20
+        back.name = "timeBarBack"
         world.addChild(back)
 
         timeBarFill.color = UIColor(hex: 0x5ec96c)
@@ -195,22 +232,25 @@ final class SquishScene: SKScene {
         points >= 100 ? 2 : points >= 40 ? 1 : 0
     }
 
+    /// 顔の状態：0=通常 1=つぶれ 2=びっくり（のばした時） 3=目回し（ふらふら時）
+    private var currentFaceCode = -1
+
     private func refreshBlobTexture() {
-        let st = stage(for: points)
+        let st = mode == .free ? skinIndex : stage(for: points)
         let fever = feverLeft > 0
-        let face = squashTime < 0.16
-        if st == currentStage && fever == currentFever && face == squishedFace { return }
+        let faceCode = squashTime < 0.16 ? 1 : stretchFactor > 0.3 ? 2 : (wobbling && wobbleTime < 0.5) ? 3 : 0
+        if st == currentStage && fever == currentFever && faceCode == currentFaceCode { return }
         currentStage = st
         currentFever = fever
-        squishedFace = face
+        currentFaceCode = faceCode
         let colors = fever ? feverColors : stageColors[st]
-        let key = "squish-\(fever ? "fever" : "\(st)")-\(face ? "s" : "n")"
-        Self.blobTexture(key: key, colors: colors, squished: face).apply(to: blob)
+        let key = "squish-\(fever ? "fever" : "\(st)")-\(faceCode)"
+        Self.blobTexture(key: key, colors: colors, face: faceCode).apply(to: blob)
     }
 
     private static func blobTexture(key: String,
                                     colors: (body: UIColor, head: UIColor, belly: UIColor, spot: UIColor?),
-                                    squished: Bool) -> ArtTexture {
+                                    face: Int) -> ArtTexture {
         Art.make(key, CGRect(x: -120, y: -125, width: 240, height: 250)) { c in
             let bodyRect = CGRect(x: -108, y: -96, width: 216, height: 192)
             // 体（放射グラデーション）
@@ -246,7 +286,7 @@ final class SquishScene: SKScene {
             // 目と口
             Art.line.setFill()
             Art.line.setStroke()
-            if squished {
+            if face == 1 {
                 // >< の目
                 c.setLineWidth(5.5)
                 for cx in [CGFloat(-34), CGFloat(34)] {
@@ -259,6 +299,38 @@ final class SquishScene: SKScene {
                 // 小さな「o」の口
                 c.setLineWidth(4.5)
                 c.strokeEllipse(in: CGRect(x: -7, y: 6, width: 14, height: 16))
+            } else if face == 2 {
+                // びっくり：大きな目と小さな丸い口
+                UIColor.white.setFill()
+                c.fillEllipse(in: CGRect(x: -52, y: -42, width: 34, height: 40))
+                c.fillEllipse(in: CGRect(x: 18, y: -42, width: 34, height: 40))
+                Art.line.setFill()
+                c.fillEllipse(in: CGRect(x: -41, y: -30, width: 13, height: 17))
+                c.fillEllipse(in: CGRect(x: 29, y: -30, width: 13, height: 17))
+                UIColor.white.setFill()
+                c.fillEllipse(in: CGRect(x: -37, y: -33, width: 5, height: 6))
+                c.fillEllipse(in: CGRect(x: 33, y: -33, width: 5, height: 6))
+                Art.line.setStroke()
+                c.setLineWidth(4.5)
+                c.strokeEllipse(in: CGRect(x: -7, y: 8, width: 14, height: 15))
+            } else if face == 3 {
+                // 目回し：バツ目と波々の口
+                c.setLineWidth(5.5)
+                for cx in [CGFloat(-34), CGFloat(34)] {
+                    c.beginPath()
+                    c.move(to: CGPoint(x: cx - 11, y: -32))
+                    c.addLine(to: CGPoint(x: cx + 11, y: -10))
+                    c.move(to: CGPoint(x: cx + 11, y: -32))
+                    c.addLine(to: CGPoint(x: cx - 11, y: -10))
+                    c.strokePath()
+                }
+                c.setLineWidth(4.5)
+                c.beginPath()
+                c.move(to: CGPoint(x: -15, y: 12))
+                c.addLine(to: CGPoint(x: -5, y: 5))
+                c.addLine(to: CGPoint(x: 5, y: 12))
+                c.addLine(to: CGPoint(x: 15, y: 5))
+                c.strokePath()
             } else {
                 // 目（白目＋瞳）
                 UIColor.white.setFill()
@@ -301,6 +373,18 @@ final class SquishScene: SKScene {
             blob.yScale = baseScale * (2 - breath)
             blob.position.y = blobCenter.y + sin(t * 1.8) * 4
         }
+        // のばし（フリーあそび）と、離した後のふらふら
+        if stretchFactor > 0 {
+            blob.xScale *= 1 + 0.34 * stretchX
+            blob.yScale *= 1 + 0.34 * stretchY
+        }
+        if wobbling {
+            wobbleTime += dt
+            let w = sin(wobbleTime * 24) * exp(-wobbleTime * 3.2) * 0.15
+            blob.xScale *= 1 + w
+            blob.yScale *= 1 - w
+            if wobbleTime > 1.4 { wobbling = false }
+        }
         refreshBlobTexture()
 
         guard phase == .playing else { return }
@@ -329,7 +413,8 @@ final class SquishScene: SKScene {
             }
         }
 
-        // タイマー
+        // タイマー（チャレンジのみ）
+        guard mode == .challenge else { return }
         timeLeft -= dt
         let ratio = max(timeLeft, 0) / 30
         timeBarFill.size.width = (W - 44) * min(ratio, 1)
@@ -352,6 +437,14 @@ final class SquishScene: SKScene {
         guard let touch = touches.first else { return }
         let p = touch.location(in: world)
 
+        if mode == .free && panel == nil {
+            if let hit = freeButtons.first(where: { $0.node.contains(p) }) {
+                press(hit.node)
+                handleFreeAction(hit.action)
+                return
+            }
+        }
+
         if let panel {
             let pp = touch.location(in: panel)
             if let hit = panelButtons.first(where: { $0.node.contains(pp) }) {
@@ -364,6 +457,7 @@ final class SquishScene: SKScene {
         if blob.contains(p) {
             if phase == .ready { startRun() }
             if phase == .playing { squish(at: p) }
+            if mode == .free { isDragging = true }
         }
     }
 
@@ -382,9 +476,21 @@ final class SquishScene: SKScene {
         comboTimer = 1.0
         squashTime = 0
 
-        // 音はコンボが続くほど高く速くなる
-        let rate = Float(1.0 + min(CGFloat(combo), 30) * 0.033)
-        SoundPlayer.shared.playSquish(rate: rate)
+        // 音：チャレンジはコンボで上昇、フリーは音階を1つずつ上がる
+        totalCount += 1
+        if totalCount % 10 == 0 { UserDefaults.standard.set(totalCount, forKey: "munyu.touch.total") }
+        totalLabel.text = "累計 \(totalCount) 回"
+        if mode == .free {
+            let now = CACurrentMediaTime()
+            if now - lastSquishAt > 1.5 { noteStep = 0 }
+            lastSquishAt = now
+            SoundPlayer.shared.playSquish(rate: Self.noteRates[noteStep])
+            showNote(Self.noteNames[noteStep])
+            noteStep = (noteStep + 1) % Self.noteRates.count
+        } else {
+            let rate = Float(1.0 + min(CGFloat(combo), 30) * 0.033)
+            SoundPlayer.shared.playSquish(rate: rate)
+        }
 
         // ハプティクス（連打時は間引く）
         let now = CACurrentMediaTime()
@@ -545,6 +651,16 @@ final class SquishScene: SKScene {
     }
 
     private func handlePanelAction(_ action: String) {
+        if action.hasPrefix("skin-") {
+            skinIndex = Int(action.dropFirst(5)) ?? 0
+            UserDefaults.standard.set(skinIndex, forKey: "munyu.touch.skin")
+            currentStage = -1 // テクスチャ再生成を強制
+            refreshBlobTexture()
+            panel?.removeFromParent()
+            panel = nil
+            panelButtons = []
+            return
+        }
         switch action {
         case "reward":
             let shown = RewardedAdManager.shared.show { [weak self] earned in
@@ -562,12 +678,16 @@ final class SquishScene: SKScene {
                 }
             }
             if !shown { showResult() }
+        case "closePanel":
+            panel?.removeFromParent()
+            panel = nil
+            panelButtons = []
         case "result":
             showResult()
         case "replay":
             InterstitialAdManager.shared.showIfNeeded { [weak self] in
                 guard let self else { return }
-                let scene = SquishScene(size: self.size)
+                let scene = SquishScene(size: self.size, mode: self.mode)
                 scene.scaleMode = self.scaleMode
                 self.view?.presentScene(scene, transition: .crossFade(withDuration: 0.3))
             }
@@ -581,6 +701,141 @@ final class SquishScene: SKScene {
         default:
             break
         }
+    }
+
+    // MARK: - Free Play
+
+    private func setupFree() {
+        phase = .playing
+        skinIndex = min(max(skinIndex, 0), stageColors.count - 1)
+        timeBarFill.alpha = 0
+        timeLabel.alpha = 0
+        world.childNode(withName: "timeBarBack")?.alpha = 0
+        scoreLabel.text = "0 回"
+
+        totalLabel.fontSize = 13
+        totalLabel.fontColor = Art.line.withAlphaComponent(0.7)
+        totalLabel.horizontalAlignmentMode = .center
+        totalLabel.verticalAlignmentMode = .center
+        totalLabel.position = P(W / 2, topInset + 104)
+        totalLabel.zPosition = 20
+        totalLabel.text = "累計 \(totalCount) 回"
+        world.addChild(totalLabel)
+
+        noteLabel.fontSize = 52
+        noteLabel.fontColor = UIColor(hex: 0xff8a3d)
+        noteLabel.horizontalAlignmentMode = .center
+        noteLabel.verticalAlignmentMode = .center
+        noteLabel.position = P(W / 2, H * 0.47 - 185)
+        noteLabel.zPosition = 20
+        noteLabel.alpha = 0
+        world.addChild(noteLabel)
+
+        let hint = label("つぶして・のばして・ならしてあそぼう", 13)
+        hint.fontColor = Art.line.withAlphaComponent(0.65)
+        hint.position = P(W / 2, H * 0.47 + 165)
+        hint.zPosition = 15
+        world.addChild(hint)
+
+        let items: [(String, String, UIColor, UIColor)] = [
+            ("カラー", "color", UIColor(hex: 0xff9db0), UIColor(hex: 0xd96b84)),
+            ("カード", "card", UIColor(hex: 0x5ec96c), UIColor(hex: 0x2f8f47)),
+            ("おわる", "home", UIColor(hex: 0x7fd0ff), UIColor(hex: 0x2f7fb0)),
+        ]
+        for (i, item) in items.enumerated() {
+            let node = button(item.0, color: item.2, shadow: item.3, width: 104)
+            node.position = P(W / 2 + CGFloat(i - 1) * 114, H - bottomInset - 44)
+            node.zPosition = 20
+            world.addChild(node)
+            freeButtons.append((node, item.1))
+        }
+    }
+
+    private func showNote(_ name: String) {
+        noteLabel.removeAllActions()
+        noteLabel.text = name
+        noteLabel.alpha = 1
+        noteLabel.setScale(0.7)
+        noteLabel.run(.sequence([
+            .scale(to: 1.15, duration: 0.08),
+            .scale(to: 1.0, duration: 0.08),
+            .wait(forDuration: 0.45),
+            .fadeOut(withDuration: 0.3),
+        ]))
+    }
+
+    private func handleFreeAction(_ action: String) {
+        switch action {
+        case "color":
+            showSkinPanel()
+        case "card":
+            let colors = stageColors[skinIndex]
+            let image = ShareCardRenderer.makeImage(body: colors.body, head: colors.head,
+                                                    belly: colors.belly, total: totalCount,
+                                                    diagnosis: Self.diagnosis(for: totalCount))
+            NotificationCenter.default.post(name: .shareMunyuResult, object: image)
+        case "home":
+            let scene = TitleScene(size: size)
+            scene.scaleMode = scaleMode
+            view?.presentScene(scene, transition: .crossFade(withDuration: 0.3))
+        default:
+            break
+        }
+    }
+
+    private func showSkinPanel() {
+        let group = makePanel(height: 170)
+        let title = label("カラー", 20)
+        title.position = CGPoint(x: 0, y: 52)
+        group.addChild(title)
+        for i in 0..<stageColors.count {
+            let dot = SKNode()
+            let circle = SKShapeNode(circleOfRadius: 16)
+            circle.fillColor = stageColors[i].body
+            circle.strokeColor = i == skinIndex ? UIColor(hex: 0xff8a3d) : Art.line
+            circle.lineWidth = i == skinIndex ? 4 : 2
+            dot.addChild(circle)
+            dot.position = CGPoint(x: CGFloat(i) * 35 - 122.5, y: -8)
+            group.addChild(dot)
+            panelButtons.append((dot, "skin-\(i)"))
+        }
+        let close = button("とじる", color: UIColor(hex: 0x7fd0ff), shadow: UIColor(hex: 0x2f7fb0), width: 160)
+        close.position = CGPoint(x: 0, y: -58)
+        group.addChild(close)
+        panelButtons.append((close, "closePanel"))
+        panel = group
+        world.addChild(group)
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard mode == .free, isDragging, let touch = touches.first else { return }
+        let p = touch.location(in: world)
+        let dx = p.x - blobCenter.x
+        let dy = p.y - blobCenter.y
+        let dist = hypot(dx, dy)
+        stretchFactor = min(max((dist - 55) / 150, 0), 1)
+        if dist > 1 {
+            stretchX = abs(dx) / dist * stretchFactor
+            stretchY = abs(dy) / dist * stretchFactor
+        }
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard mode == .free, isDragging else { return }
+        isDragging = false
+        if stretchFactor > 0.35 {
+            // 離した反動で1回つぶした扱い＋ふらふら
+            wobbling = true
+            wobbleTime = 0
+            squish(at: blobCenter)
+        }
+        stretchFactor = 0
+        stretchX = 0
+        stretchY = 0
+    }
+
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        touchesEnded(touches, with: event)
     }
 
     // MARK: - Panel / Button builders

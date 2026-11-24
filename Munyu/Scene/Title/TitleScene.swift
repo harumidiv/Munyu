@@ -44,6 +44,7 @@ class TitleScene: SKScene {
     /// 芋虫の頭の位置（showcase 内）
     private var showcaseHeadY: CGFloat = 0
     private var playButton: SKNode?
+    private var challengeButton: SKNode?
     private var rankingButton: SKNode?
 
     /// 順番に見せる進化の姿
@@ -112,7 +113,10 @@ class TitleScene: SKScene {
         guard !isStarting, let p = touches.first?.location(in: world) else { return }
         if let play = playButton, play.contains(p) {
             press(play)
-            startGame()
+            startGame(.free)
+        } else if let challenge = challengeButton, challenge.contains(p) {
+            press(challenge)
+            startGame(.challenge)
         } else if let rank = rankingButton, rank.contains(p) {
             press(rank)
             NotificationCenter.default.post(name: .leaderBordScoreRanking, object: nil)
@@ -241,17 +245,22 @@ class TitleScene: SKScene {
     /// あそぶボタンの一番上（論理座標）
     private var buttonTop: CGFloat {
         let ranking: CGFloat = GKLocalPlayer.local.isAuthenticated ? 52 : 0
-        return H - bottomInset - 26 - ranking - 84
+        return H - bottomInset - 26 - ranking - 158
     }
 
     private func setupButtons() {
         let hasRanking = GKLocalPlayer.local.isAuthenticated
         let bottom = H - bottomInset - 26 - (hasRanking ? 52 : 0)
         let node = playButtonNode()
-        node.position = CGPoint(x: W / 2, y: H - (bottom - 42))
+        node.position = CGPoint(x: W / 2, y: H - (bottom - 112))
         node.zPosition = 10
         world.addChild(node)
         playButton = node
+        let challenge = pillButton("30秒チャレンジ", color: UIColor(hex: 0x7fd0ff), shadow: UIColor(hex: 0x2f7fb0), width: 220)
+        challenge.position = CGPoint(x: W / 2, y: H - (bottom - 42))
+        challenge.zPosition = 10
+        world.addChild(challenge)
+        challengeButton = challenge
         if hasRanking {
             let node = pillButton("ランキング", color: UIColor(hex: 0x7fd0ff), shadow: UIColor(hex: 0x2f7fb0), width: 160)
             node.position = CGPoint(x: W / 2, y: H - (bottom + 26))
@@ -283,8 +292,8 @@ class TitleScene: SKScene {
         let name = label("あそぶ", 26)
         name.position = CGPoint(x: 0, y: 10)
         group.addChild(name)
-        let best = UserDefaults.standard.integer(forKey: "munyu.touch.best")
-        let detail = label(best > 0 ? "30秒つぶし　ベスト \(best) 回" : "30秒で何回つぶせる？", 12)
+        let total = UserDefaults.standard.integer(forKey: "munyu.touch.total")
+        let detail = label(total > 0 ? "つぶして・のばして・ならそう　累計 \(total) 回" : "つぶして・のばして・ならそう", 12)
         detail.fontColor = Art.line.withAlphaComponent(0.8)
         detail.position = CGPoint(x: 0, y: -17)
         group.addChild(detail)
@@ -314,13 +323,13 @@ class TitleScene: SKScene {
         node.run(.sequence([.scale(to: 0.94, duration: 0.06), .scale(to: 1, duration: 0.08)]))
     }
 
-    private func startGame() {
+    private func startGame(_ mode: SquishScene.Mode) {
         guard !isStarting else { return }
         isStarting = true
         model.itemSoundPlay()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         removeAction(forKey: "showcase")
-        let scene = SquishScene(size: size)
+        let scene = SquishScene(size: size, mode: mode)
         scene.scaleMode = scaleMode
         run(.sequence([.wait(forDuration: 0.15), .run { [weak self] in
             self?.view?.presentScene(scene, transition: .crossFade(withDuration: 0.3))
