@@ -6,8 +6,8 @@
 //  Copyright © 2019 佐川晴海. All rights reserved.
 //
 //  タイトル画面。流れる地面の上にロゴと、いろいろな進化の姿を順番に見せ、
-//  難易度ボタンをタップするとゲームが始まる。
-//  計算は GameScene と同じく「幅360の論理座標・y は下向き」で行う。
+//  「あそぶ」ボタンをタップすると むにゅタッチ（SquishScene）が始まる。
+//  計算は SquishScene と同じく「幅360の論理座標・y は下向き」で行う。
 //
 
 import SpriteKit
@@ -18,7 +18,6 @@ class TitleScene: SKScene {
 
     // MARK: - Property
 
-    private let difficulties: [Difficulty] = [.easy, .normal, .hard]
     private let model: GameModel = GameModelImpl()
 
     private let W = GameConst.width
@@ -44,7 +43,7 @@ class TitleScene: SKScene {
     private var showcaseScale: CGFloat = 1.9
     /// 芋虫の頭の位置（showcase 内）
     private var showcaseHeadY: CGFloat = 0
-    private var buttons: [(node: SKNode, difficulty: Difficulty)] = []
+    private var playButton: SKNode?
     private var rankingButton: SKNode?
 
     /// 順番に見せる進化の姿
@@ -111,9 +110,9 @@ class TitleScene: SKScene {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard !isStarting, let p = touches.first?.location(in: world) else { return }
-        if let hit = buttons.first(where: { $0.node.contains(p) }) {
-            press(hit.node)
-            startGame(hit.difficulty)
+        if let play = playButton, play.contains(p) {
+            press(play)
+            startGame()
         } else if let rank = rankingButton, rank.contains(p) {
             press(rank)
             NotificationCenter.default.post(name: .leaderBordScoreRanking, object: nil)
@@ -154,8 +153,8 @@ class TitleScene: SKScene {
         logo.addChild(card)
 
         let title = SKLabelNode()
-        title.attributedText = NSAttributedString(string: "Goむにゅ", attributes: [
-            .font: UIFont(name: GameConst.fontName, size: 58) ?? Art.font(58),
+        title.attributedText = NSAttributedString(string: "むにゅタッチ", attributes: [
+            .font: UIFont(name: GameConst.fontName, size: 46) ?? Art.font(46),
             .foregroundColor: UIColor(hex: 0x9fd94c),
             .strokeColor: Art.line,
             .strokeWidth: -5,
@@ -164,7 +163,7 @@ class TitleScene: SKScene {
         title.position = CGPoint(x: 0, y: 16)
         logo.addChild(title)
 
-        let sub = label("食べて進化して、3体のボスをたおそう", 13)
+        let sub = label("30秒で何回つぶせる？ むにゅむにゅASMR", 13)
         sub.position = CGPoint(x: 0, y: -38)
         logo.addChild(sub)
 
@@ -239,31 +238,20 @@ class TitleScene: SKScene {
         ring.run(.sequence([.group([.scale(to: 2.6, duration: 0.4), .fadeOut(withDuration: 0.4)]), .removeFromParent()]))
     }
 
-    /// 横長の画面（iPad や開いた折りたたみ端末）では、難易度ボタンを横に並べて紹介の場所を広く取る
-    private var isCompact: Bool { H < 600 }
-
-    /// 難易度ボタンの一番上（論理座標）
+    /// あそぶボタンの一番上（論理座標）
     private var buttonTop: CGFloat {
         let ranking: CGFloat = GKLocalPlayer.local.isAuthenticated ? 52 : 0
-        let buttons: CGFloat = isCompact ? 72 : CGFloat(difficulties.count) * 70
-        return H - bottomInset - 26 - ranking - buttons
+        return H - bottomInset - 26 - ranking - 84
     }
 
     private func setupButtons() {
         let hasRanking = GKLocalPlayer.local.isAuthenticated
         let bottom = H - bottomInset - 26 - (hasRanking ? 52 : 0)
-        for (i, d) in difficulties.enumerated() {
-            let node = isCompact ? compactDifficultyButton(d) : difficultyButton(d)
-            if isCompact {
-                node.position = CGPoint(x: W / 2 + (CGFloat(i) - 1) * 116, y: H - (bottom - 36))
-            } else {
-                let y = bottom - CGFloat(difficulties.count - i) * 70 + 35
-                node.position = CGPoint(x: W / 2, y: H - y)
-            }
-            node.zPosition = 10
-            world.addChild(node)
-            buttons.append((node, d))
-        }
+        let node = playButtonNode()
+        node.position = CGPoint(x: W / 2, y: H - (bottom - 42))
+        node.zPosition = 10
+        world.addChild(node)
+        playButton = node
         if hasRanking {
             let node = pillButton("ランキング", color: UIColor(hex: 0x7fd0ff), shadow: UIColor(hex: 0x2f7fb0), width: 160)
             node.position = CGPoint(x: W / 2, y: H - (bottom + 26))
@@ -273,16 +261,17 @@ class TitleScene: SKScene {
         }
     }
 
-    private func difficultyButton(_ d: Difficulty) -> SKNode {
+    /// 大きな「あそぶ」ボタン。ベスト記録も出す
+    private func playButtonNode() -> SKNode {
         let group = SKNode()
-        let w: CGFloat = 290, h: CGFloat = 58
-        let base = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 18)
-        base.fillColor = d.shadowColor
+        let w: CGFloat = 290, h: CGFloat = 72
+        let base = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 20)
+        base.fillColor = UIColor(hex: 0xa34a12)
         base.strokeColor = .clear
         base.position = CGPoint(x: 0, y: -5)
         group.addChild(base)
-        let face = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 18)
-        face.fillColor = d.color
+        let face = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 20)
+        face.fillColor = UIColor(hex: 0xff8a3d)
         face.strokeColor = Art.line
         face.lineWidth = 2.6
         group.addChild(face)
@@ -291,53 +280,14 @@ class TitleScene: SKScene {
         shine.strokeColor = .clear
         shine.position = CGPoint(x: 0, y: h / 2 - 9)
         group.addChild(shine)
-
-        let name = label(d.displayName, 22)
-        name.horizontalAlignmentMode = .left
-        name.position = CGPoint(x: -w / 2 + 20, y: 7)
+        let name = label("あそぶ", 26)
+        name.position = CGPoint(x: 0, y: 10)
         group.addChild(name)
-        let detail = label(d.detail, 11)
-        detail.horizontalAlignmentMode = .left
-        detail.fontColor = Art.line.withAlphaComponent(0.75)
-        detail.position = CGPoint(x: -w / 2 + 21, y: -15)
+        let best = UserDefaults.standard.integer(forKey: "munyu.touch.best")
+        let detail = label(best > 0 ? "30秒つぶし　ベスト \(best) 回" : "30秒で何回つぶせる？", 12)
+        detail.fontColor = Art.line.withAlphaComponent(0.8)
+        detail.position = CGPoint(x: 0, y: -17)
         group.addChild(detail)
-
-        let best = BestScore.get(d)
-        let bestTitle = label("ベスト", 10)
-        bestTitle.horizontalAlignmentMode = .right
-        bestTitle.fontColor = Art.line.withAlphaComponent(0.75)
-        bestTitle.position = CGPoint(x: w / 2 - 18, y: 9)
-        group.addChild(bestTitle)
-        let bestValue = label(best > 0 ? "\(best)" : "-", 17)
-        bestValue.horizontalAlignmentMode = .right
-        bestValue.position = CGPoint(x: w / 2 - 18, y: -9)
-        group.addChild(bestValue)
-        return group
-    }
-
-    /// 横に並べる小さい難易度ボタン
-    private func compactDifficultyButton(_ d: Difficulty) -> SKNode {
-        let group = SKNode()
-        let w: CGFloat = 108, h: CGFloat = 64
-        let base = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 16)
-        base.fillColor = d.shadowColor
-        base.strokeColor = .clear
-        base.position = CGPoint(x: 0, y: -5)
-        group.addChild(base)
-        let face = SKShapeNode(rectOf: CGSize(width: w, height: h), cornerRadius: 16)
-        face.fillColor = d.color
-        face.strokeColor = Art.line
-        face.lineWidth = 2.6
-        group.addChild(face)
-        let name = label(d.displayName, 17)
-        name.position = CGPoint(x: 0, y: 9)
-        if name.frame.width > w - 12 { name.setScale((w - 12) / name.frame.width) }
-        group.addChild(name)
-        let best = BestScore.get(d)
-        let bestLabel = label("ベスト \(best > 0 ? "\(best)" : "-")", 10)
-        bestLabel.fontColor = Art.line.withAlphaComponent(0.75)
-        bestLabel.position = CGPoint(x: 0, y: -15)
-        group.addChild(bestLabel)
         return group
     }
 
@@ -364,13 +314,14 @@ class TitleScene: SKScene {
         node.run(.sequence([.scale(to: 0.94, duration: 0.06), .scale(to: 1, duration: 0.08)]))
     }
 
-    private func startGame(_ difficulty: Difficulty) {
+    private func startGame() {
         guard !isStarting else { return }
         isStarting = true
         model.itemSoundPlay()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         removeAction(forKey: "showcase")
-        let scene = GameScene(size: size, difficulty: difficulty)
+        let scene = SquishScene(size: size)
+        scene.scaleMode = scaleMode
         run(.sequence([.wait(forDuration: 0.15), .run { [weak self] in
             self?.view?.presentScene(scene, transition: .crossFade(withDuration: 0.3))
         }]))

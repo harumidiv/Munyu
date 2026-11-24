@@ -24,6 +24,7 @@ final class SoundPlayer: @unchecked Sendable {
     private let queue = DispatchQueue(label: "munyu.sound", qos: .userInitiated)
     private var item: AVAudioPlayer?
     private var damage: AVAudioPlayer?
+    private var squish: AVAudioPlayer?
 
     private init() {
         queue.async { [self] in
@@ -37,6 +38,8 @@ final class SoundPlayer: @unchecked Sendable {
             }
             item = Self.load("monyu")
             damage = Self.load("kan")
+            squish = Self.load("monyu")
+            squish?.enableRate = true
         }
     }
 
@@ -45,6 +48,16 @@ final class SoundPlayer: @unchecked Sendable {
 
     func playItem() { queue.async { [self] in Self.restart(item) } }
     func playDamage() { queue.async { [self] in Self.restart(damage) } }
+
+    /// つぶし音。コンボが続くほど rate を上げて高く速く鳴らす
+    func playSquish(rate: Float) {
+        queue.async { [self] in
+            guard let squish else { return }
+            squish.rate = min(2.0, max(0.5, rate))
+            if squish.isPlaying { squish.currentTime = 0 }
+            squish.play()
+        }
+    }
 
     private static func load(_ name: String) -> AVAudioPlayer? {
         guard let url = Bundle.main.url(forResource: name, withExtension: "mp3"),

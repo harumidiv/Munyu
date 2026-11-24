@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var gameCenterAuthVC: UIViewController? = nil
     @State private var isShowingGameCenterAuth: Bool = false
     @State private var isShowBestScore: Bool = false
+    @State private var sharePayload: SharePayload? = nil
     /// バナー広告を出すか（リザルト画面・一時停止メニューから切り替える）
     @State private var isShowingBanner = false
     @ObservedObject private var banner = BannerAdModel.shared
@@ -42,6 +43,14 @@ struct ContentView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: .leaderBordScoreRanking)) { _ in
                 isShowBestScore.toggle()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .shareMunyuResult)) { note in
+                if let text = note.object as? String {
+                    sharePayload = SharePayload(text: text)
+                }
+            }
+            .sheet(item: $sharePayload) { payload in
+                ActivityView(items: [payload.text])
             }
             .sheet(isPresented: $isShowingGameCenterAuth, onDismiss: {
                 self.gameCenterAuthVC = nil
@@ -95,4 +104,26 @@ struct GameCenterAuthView: UIViewControllerRepresentable {
             self.parent = parent
         }
     }
+}
+
+struct SharePayload: Identifiable {
+    let id = UUID()
+    let text: String
+}
+
+struct ActivityView: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    static let leaderBordScoreRanking = Notification.Name("leaderBordScoreRanking")
+    static let shareMunyuResult = Notification.Name("shareMunyuResult")
 }

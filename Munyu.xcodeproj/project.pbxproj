@@ -14,13 +14,11 @@
 		0D54E6BC227462B300AADEA2 /* MunyuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6BB227462B300AADEA2 /* MunyuTests.swift */; };
 		0D54E6C7227462B300AADEA2 /* MunyuUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6C6227462B300AADEA2 /* MunyuUITests.swift */; };
 		0D54E6D5227462E800AADEA2 /* TitleScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D54E6D4227462E800AADEA2 /* TitleScene.swift */; };
-		0DFD694A227553BB000DBD93 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6949227553BB000DBD93 /* GameScene.swift */; };
-		0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD694B227553C9000DBD93 /* ResultScene.swift */; };
+		0DFF1001227553BB000DBD93 /* SquishScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFF1000227553BB000DBD93 /* SquishScene.swift */; };
 		0DFD69502275559C000DBD93 /* monyu.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD694E2275559C000DBD93 /* monyu.mp3 */; };
 		0DFD69512275559C000DBD93 /* kan.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 0DFD694F2275559C000DBD93 /* kan.mp3 */; };
 		0DFD6954227555E5000DBD93 /* SKLabelNode+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD6953227555E5000DBD93 /* SKLabelNode+Addition.swift */; };
 		0DFD695622755A20000DBD93 /* SKSpriteNode+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD695522755A20000DBD93 /* SKSpriteNode+Addition.swift */; };
-		0DFD695B22757605000DBD93 /* GamePresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD695A22757605000DBD93 /* GamePresenter.swift */; };
 		0DFD695D22757636000DBD93 /* GameModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD695C22757636000DBD93 /* GameModel.swift */; };
 		0DFD69642275932D000DBD93 /* ObjectPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD69632275932D000DBD93 /* ObjectPosition.swift */; };
 		0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFD696522769236000DBD93 /* SKScene+Addition.swift */; };
@@ -67,13 +65,11 @@
 		0D54E6C6227462B300AADEA2 /* MunyuUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MunyuUITests.swift; sourceTree = "<group>"; };
 		0D54E6C8227462B300AADEA2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0D54E6D4227462E800AADEA2 /* TitleScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleScene.swift; sourceTree = "<group>"; };
-		0DFD6949227553BB000DBD93 /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
-		0DFD694B227553C9000DBD93 /* ResultScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScene.swift; sourceTree = "<group>"; };
+		0DFF1000227553BB000DBD93 /* SquishScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SquishScene.swift; sourceTree = "<group>"; };
 		0DFD694E2275559C000DBD93 /* monyu.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = monyu.mp3; sourceTree = "<group>"; };
 		0DFD694F2275559C000DBD93 /* kan.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = kan.mp3; sourceTree = "<group>"; };
 		0DFD6953227555E5000DBD93 /* SKLabelNode+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKLabelNode+Addition.swift"; sourceTree = "<group>"; };
 		0DFD695522755A20000DBD93 /* SKSpriteNode+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKSpriteNode+Addition.swift"; sourceTree = "<group>"; };
-		0DFD695A22757605000DBD93 /* GamePresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamePresenter.swift; sourceTree = "<group>"; };
 		0DFD695C22757636000DBD93 /* GameModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModel.swift; sourceTree = "<group>"; };
 		0DFD69632275932D000DBD93 /* ObjectPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectPosition.swift; sourceTree = "<group>"; };
 		0DFD696522769236000DBD93 /* SKScene+Addition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SKScene+Addition.swift"; sourceTree = "<group>"; };
@@ -206,6 +202,7 @@
 			children = (
 				49C8DC502E7AEB6C0071CC9B /* GameCenterView.swift */,
 				0D54E6D4227462E800AADEA2 /* TitleScene.swift */,
+				0DFF1000227553BB000DBD93 /* SquishScene.swift */,
 				49C8DBE12E7A83870071CC9B /* MunyuApp.swift */,
 				49C8DBE32E7A83890071CC9B /* ContentView.swift */,
 			);
@@ -215,8 +212,6 @@
 		0DFD6958227575DE000DBD93 /* Game */ = {
 			isa = PBXGroup;
 			children = (
-				0DFD6949227553BB000DBD93 /* GameScene.swift */,
-				0DFD695A22757605000DBD93 /* GamePresenter.swift */,
 				0DFD695C22757636000DBD93 /* GameModel.swift */,
 			);
 			path = Game;
@@ -225,7 +220,6 @@
 		0DFD6959227575E0000DBD93 /* Result */ = {
 			isa = PBXGroup;
 			children = (
-				0DFD694B227553C9000DBD93 /* ResultScene.swift */,
 			);
 			path = Result;
 			sourceTree = "<group>";
@@ -403,14 +397,12 @@
 				A1C0DE03000000000000000B /* MunyuArt.swift in Sources */,
 				0DFD6968227694E8000DBD93 /* CGPoint+Addition.swift in Sources */,
 				0DFD695D22757636000DBD93 /* GameModel.swift in Sources */,
-				0DFD694C227553C9000DBD93 /* ResultScene.swift in Sources */,
 				0D54E6D5227462E800AADEA2 /* TitleScene.swift in Sources */,
-				0DFD694A227553BB000DBD93 /* GameScene.swift in Sources */,
+				0DFF1001227553BB000DBD93 /* SquishScene.swift in Sources */,
 				0DFD696622769236000DBD93 /* SKScene+Addition.swift in Sources */,
 				0DFD695622755A20000DBD93 /* SKSpriteNode+Addition.swift in Sources */,
 				49C8DC512E7AEB6C0071CC9B /* GameCenterView.swift in Sources */,
 				49C8DBE22E7A83870071CC9B /* MunyuApp.swift in Sources */,
-				0DFD695B22757605000DBD93 /* GamePresenter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -588,7 +580,7 @@
 				CODE_SIGN_ENTITLEMENTS = Munyu/Munyu.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.adventure-games";
@@ -597,7 +589,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = harumidiv.Munyu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -613,7 +605,7 @@
 				CODE_SIGN_ENTITLEMENTS = Munyu/Munyu.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = 24BSY9Z4H5;
 				INFOPLIST_FILE = Munyu/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.adventure-games";
@@ -622,7 +614,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.2;
+				MARKETING_VERSION = 2.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = harumidiv.Munyu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
