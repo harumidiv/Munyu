@@ -346,203 +346,203 @@ final class SquishScene: SKScene {
         }
     }
 
-// MARK: - Touch
+    // MARK: - Touch
 
-override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-guard let touch = touches.first else { return}
-let p = touch.location(in: world)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let p = touch.location(in: world)
 
-if let panel {
-let pp = touch.location(in: panel)
-if let hit = panelButtons.first(where: { $0.node.contains(pp)}) {
-press(hit.node)
-handlePanelAction(hit.action)
-}
-return
-}
+        if let panel {
+            let pp = touch.location(in: panel)
+            if let hit = panelButtons.first(where: { $0.node.contains(pp) }) {
+                press(hit.node)
+                handlePanelAction(hit.action)
+            }
+            return
+        }
 
-if blob.contains(p) {
-if phase ==.ready { startRun()}
-if phase ==.playing { squish(at: p)}
-}
-}
+        if blob.contains(p) {
+            if phase == .ready { startRun() }
+            if phase == .playing { squish(at: p) }
+        }
+    }
 
-private func startRun() {
-phase =.playing
-readyLabel?.removeFromParent()
-readyLabel = nil
-timeLabel.text = "30 秒"
-}
+    private func startRun() {
+        phase = .playing
+        readyLabel?.removeFromParent()
+        readyLabel = nil
+        timeLabel.text = "30 秒"
+    }
 
-private func squish(at p: CGPoint) {
-let gain = feverLeft > 0? 3: 1
-points += gain
-combo += 1
-maxCombo = max(maxCombo, combo)
-comboTimer = 1.0
-squashTime = 0
+    private func squish(at p: CGPoint) {
+        let gain = feverLeft > 0 ? 3 : 1
+        points += gain
+        combo += 1
+        maxCombo = max(maxCombo, combo)
+        comboTimer = 1.0
+        squashTime = 0
 
-// 音はコンボが続くほど高く速くなる
-let rate = Float(1.0 + min(CGFloat(combo), 30) * 0.033)
-SoundPlayer.shared.playSquish(rate: rate)
+        // 音はコンボが続くほど高く速くなる
+        let rate = Float(1.0 + min(CGFloat(combo), 30) * 0.033)
+        SoundPlayer.shared.playSquish(rate: rate)
 
-// ハプティクス（連打時は間引く）
-let now = CACurrentMediaTime()
-if now - lastHapticTime > 0.05 {
-lightHaptic.impactOccurred()
-lastHapticTime = now
-}
-if points % 50 < gain {
-mediumHaptic.impactOccurred()
-ringEffect()
-}
+        // ハプティクス（連打時は間引く）
+        let now = CACurrentMediaTime()
+        if now - lastHapticTime > 0.05 {
+            lightHaptic.impactOccurred()
+            lastHapticTime = now
+        }
+        if points % 50 < gain {
+            mediumHaptic.impactOccurred()
+            ringEffect()
+        }
 
-scoreLabel.text = "\(points) 回"
-scoreLabel.run(.sequence([.scale(to: 1.12, duration: 0.05),.scale(to: 1, duration: 0.08)]))
-if combo >= 3 {
-comboLabel.text = "\(combo) コンボ！"
-comboLabel.alpha = 1
-}
-floatText("+\(gain)", at: p)
-particles(at: p)
-}
+        scoreLabel.text = "\(points) 回"
+        scoreLabel.run(.sequence([.scale(to: 1.12, duration: 0.05), .scale(to: 1, duration: 0.08)]))
+        if combo >= 3 {
+            comboLabel.text = "\(combo) コンボ！"
+            comboLabel.alpha = 1
+        }
+        floatText("+\(gain)", at: p)
+        particles(at: p)
+    }
 
-private func floatText(_ text: String, at p: CGPoint) {
-let node = label(text, 17)
-node.fontColor = UIColor(hex: 0xff8a3d)
-node.position = p
-node.zPosition = 30
-world.addChild(node)
-node.run(.sequence([
-.group([.moveBy(x: 0, y: 34, duration: 0.5),.fadeOut(withDuration: 0.5)]),
-.removeFromParent(),
-]))
-}
+    private func floatText(_ text: String, at p: CGPoint) {
+        let node = label(text, 17)
+        node.fontColor = UIColor(hex: 0xff8a3d)
+        node.position = p
+        node.zPosition = 30
+        world.addChild(node)
+        node.run(.sequence([
+            .group([.moveBy(x: 0, y: 34, duration: 0.5), .fadeOut(withDuration: 0.5)]),
+            .removeFromParent(),
+        ]))
+    }
 
-private func particles(at p: CGPoint) {
-let colors = stageColors[stage(for: points)]
-for _ in 0..<4 {
-let node = SKShapeNode(circleOfRadius: CGFloat.random(in: 3...6))
-node.fillColor = [colors.body, colors.head, colors.belly].randomElement()?? colors.body
-node.strokeColor =.clear
-node.position = p
-node.zPosition = 5
-world.addChild(node)
-let dx = CGFloat.random(in: -70...70)
-let dy = CGFloat.random(in: 20...90)
-node.run(.sequence([
-.group([.moveBy(x: dx, y: dy, duration: 0.4),.fadeOut(withDuration: 0.4)]),
-.removeFromParent(),
-]))
-}
-}
+    private func particles(at p: CGPoint) {
+        let colors = stageColors[stage(for: points)]
+        for _ in 0..<4 {
+            let node = SKShapeNode(circleOfRadius: CGFloat.random(in: 3...6))
+            node.fillColor = [colors.body, colors.head, colors.belly].randomElement() ?? colors.body
+            node.strokeColor = .clear
+            node.position = p
+            node.zPosition = 5
+            world.addChild(node)
+            let dx = CGFloat.random(in: -70...70)
+            let dy = CGFloat.random(in: 20...90)
+            node.run(.sequence([
+                .group([.moveBy(x: dx, y: dy, duration: 0.4), .fadeOut(withDuration: 0.4)]),
+                .removeFromParent(),
+            ]))
+        }
+    }
 
-private func ringEffect() {
-let ring = SKShapeNode(circleOfRadius: 60)
-ring.strokeColor = UIColor(hex: 0xfff6a8)
-ring.lineWidth = 5
-ring.position = blobCenter
-ring.zPosition = 6
-world.addChild(ring)
-ring.run(.sequence([
-.group([.scale(to: 2.4, duration: 0.4),.fadeOut(withDuration: 0.4)]),
-.removeFromParent(),
-]))
-}
+    private func ringEffect() {
+        let ring = SKShapeNode(circleOfRadius: 60)
+        ring.strokeColor = UIColor(hex: 0xfff6a8)
+        ring.lineWidth = 5
+        ring.position = blobCenter
+        ring.zPosition = 6
+        world.addChild(ring)
+        ring.run(.sequence([
+            .group([.scale(to: 2.4, duration: 0.4), .fadeOut(withDuration: 0.4)]),
+            .removeFromParent(),
+        ]))
+    }
 
-// MARK: - End / Result
+    // MARK: - End / Result
 
-private func endRun() {
-timeLeft = 0
-if!rewardUsed {
-phase =.rewardChoice
-showRewardPanel()
-} else {
-finalize()
-}
-}
+    private func endRun() {
+        timeLeft = 0
+        if !rewardUsed {
+            phase = .rewardChoice
+            showRewardPanel()
+        } else {
+            finalize()
+        }
+    }
 
-private func showRewardPanel() {
-let group = makePanel(height: 216)
-let title = label("時間切れ！", 24)
-title.position = CGPoint(x: 0, y: 66)
-group.addChild(title)
-let score = label("\(points) 回つぶした", 17)
-score.position = CGPoint(x: 0, y: 30)
-group.addChild(score)
-let adBtn = button("広告を見て +10秒", color: UIColor(hex: 0x5ec96c), shadow: UIColor(hex: 0x2f8f47), width: 250)
-adBtn.position = CGPoint(x: 0, y: -18)
-group.addChild(adBtn)
-panelButtons.append((adBtn, "reward"))
-let resultBtn = button("結果を見る", color: UIColor(hex: 0xff8a3d), shadow: UIColor(hex: 0xa34a12), width: 250)
-resultBtn.position = CGPoint(x: 0, y: -76)
-group.addChild(resultBtn)
-panelButtons.append((resultBtn, "result"))
-panel = group
-world.addChild(group)
-}
+    private func showRewardPanel() {
+        let group = makePanel(height: 216)
+        let title = label("時間切れ！", 24)
+        title.position = CGPoint(x: 0, y: 66)
+        group.addChild(title)
+        let score = label("\(points) 回つぶした", 17)
+        score.position = CGPoint(x: 0, y: 30)
+        group.addChild(score)
+        let adBtn = button("広告を見て +10秒", color: UIColor(hex: 0x5ec96c), shadow: UIColor(hex: 0x2f8f47), width: 250)
+        adBtn.position = CGPoint(x: 0, y: -18)
+        group.addChild(adBtn)
+        panelButtons.append((adBtn, "reward"))
+        let resultBtn = button("結果を見る", color: UIColor(hex: 0xff8a3d), shadow: UIColor(hex: 0xa34a12), width: 250)
+        resultBtn.position = CGPoint(x: 0, y: -76)
+        group.addChild(resultBtn)
+        panelButtons.append((resultBtn, "result"))
+        panel = group
+        world.addChild(group)
+    }
 
-private func finalize() {
-phase =.finished
-panel?.removeFromParent()
-panel = nil
-panelButtons = []
+    private func finalize() {
+        phase = .finished
+        panel?.removeFromParent()
+        panel = nil
+        panelButtons = []
 
-// ベスト記録と Game Center
-let best = UserDefaults.standard.integer(forKey: "munyu.touch.best")
-let isBest = points > best
-if isBest { UserDefaults.standard.set(points, forKey: "munyu.touch.best")}
-if GKLocalPlayer.local.isAuthenticated {
-GKLeaderboard.submitScore(points, context: 0, player: GKLocalPlayer.local,
-leaderboardIDs: ["munyu.best.score.lanking"]) { _ in}
-}
-InterstitialAdManager.shared.playEnded()
-NotificationCenter.default.post(name:.showBannerAd, object: nil)
+        // ベスト記録と Game Center
+        let best = UserDefaults.standard.integer(forKey: "munyu.touch.best")
+        let isBest = points > best
+        if isBest { UserDefaults.standard.set(points, forKey: "munyu.touch.best") }
+        if GKLocalPlayer.local.isAuthenticated {
+            GKLeaderboard.submitScore(points, context: 0, player: GKLocalPlayer.local,
+                                      leaderboardIDs: ["munyu.best.score.lanking"]) { _ in }
+        }
+        InterstitialAdManager.shared.playEnded()
+        NotificationCenter.default.post(name: .showBannerAd, object: nil)
 
-let group = makePanel(height: 380)
-let title = label("結果", 20)
-title.fontColor = Art.line.withAlphaComponent(0.7)
-title.position = CGPoint(x: 0, y: 158)
-group.addChild(title)
-let diagnosis = label(Self.diagnosis(for: points), 21)
-diagnosis.fontColor = UIColor(hex: 0xff8a3d)
-diagnosis.position = CGPoint(x: 0, y: 124)
-shrink(diagnosis, maxWidth: 270)
-group.addChild(diagnosis)
-let score = label("\(points) 回", 44)
-score.position = CGPoint(x: 0, y: 78)
-group.addChild(score)
-let detail = label("最大 \(maxCombo) コンボ　ベスト \(max(points, best)) 回\(isBest? "（更新！）": "")", 13)
-detail.fontColor = Art.line.withAlphaComponent(0.75)
-detail.position = CGPoint(x: 0, y: 40)
-group.addChild(detail)
+        let group = makePanel(height: 380)
+        let title = label("結果", 20)
+        title.fontColor = Art.line.withAlphaComponent(0.7)
+        title.position = CGPoint(x: 0, y: 158)
+        group.addChild(title)
+        let diagnosis = label(Self.diagnosis(for: points), 21)
+        diagnosis.fontColor = UIColor(hex: 0xff8a3d)
+        diagnosis.position = CGPoint(x: 0, y: 124)
+        shrink(diagnosis, maxWidth: 270)
+        group.addChild(diagnosis)
+        let score = label("\(points) 回", 44)
+        score.position = CGPoint(x: 0, y: 78)
+        group.addChild(score)
+        let detail = label("最大 \(maxCombo) コンボ　ベスト \(max(points, best)) 回\(isBest ? "（更新！）" : "")", 13)
+        detail.fontColor = Art.line.withAlphaComponent(0.75)
+        detail.position = CGPoint(x: 0, y: 40)
+        group.addChild(detail)
 
-let replay = button("もう一度", color: UIColor(hex: 0xff8a3d), shadow: UIColor(hex: 0xa34a12), width: 250)
-replay.position = CGPoint(x: 0, y: -16)
-group.addChild(replay)
-panelButtons.append((replay, "replay"))
-let share = button("シェアする", color: UIColor(hex: 0x5ec96c), shadow: UIColor(hex: 0x2f8f47), width: 250)
-share.position = CGPoint(x: 0, y: -76)
-group.addChild(share)
-panelButtons.append((share, "share"))
-let home = button("タイトルへ", color: UIColor(hex: 0x7fd0ff), shadow: UIColor(hex: 0x2f7fb0), width: 250)
-home.position = CGPoint(x: 0, y: -136)
-group.addChild(home)
-panelButtons.append((home, "home"))
-panel = group
-world.addChild(group)
-}
+        let replay = button("もう一度", color: UIColor(hex: 0xff8a3d), shadow: UIColor(hex: 0xa34a12), width: 250)
+        replay.position = CGPoint(x: 0, y: -16)
+        group.addChild(replay)
+        panelButtons.append((replay, "replay"))
+        let share = button("シェアする", color: UIColor(hex: 0x5ec96c), shadow: UIColor(hex: 0x2f8f47), width: 250)
+        share.position = CGPoint(x: 0, y: -76)
+        group.addChild(share)
+        panelButtons.append((share, "share"))
+        let home = button("タイトルへ", color: UIColor(hex: 0x7fd0ff), shadow: UIColor(hex: 0x2f7fb0), width: 250)
+        home.position = CGPoint(x: 0, y: -136)
+        group.addChild(home)
+        panelButtons.append((home, "home"))
+        panel = group
+        world.addChild(group)
+    }
 
-static func diagnosis(for points: Int) -> String {
-switch points {
-case..<30: return "脳の柔らかさ：こんにゃく級"
-case..<60: return "脳の柔らかさ：豆腐級"
-case..<100: return "脳の柔らかさ：マシュマロ級"
-case..<150: return "癒しマスター級"
-case..<200: return "むにゅ虐待度：キケン"
-default: return "伝説のむにゅつぶし"
-}
-}
+    static func diagnosis(for points: Int) -> String {
+        switch points {
+        case ..<30: return "脳の柔らかさ：こんにゃく級"
+        case ..<60: return "脳の柔らかさ：豆腐級"
+        case ..<100: return "脳の柔らかさ：マシュマロ級"
+        case ..<150: return "癒しマスター級"
+        case ..<200: return "むにゅ虐待度：キケン"
+        default: return "伝説のむにゅつぶし"
+        }
+    }
 
 private func handlePanelAction(_ action: String) {
 switch action {
