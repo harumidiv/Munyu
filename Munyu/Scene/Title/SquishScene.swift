@@ -458,7 +458,7 @@ final class SquishScene: SKScene {
             phase = .rewardChoice
             showRewardPanel()
         } else {
-            finalize()
+            showResult()
         }
     }
 
@@ -482,7 +482,7 @@ final class SquishScene: SKScene {
         world.addChild(group)
     }
 
-    private func finalize() {
+    private func showResult() {
         phase = .finished
         panel?.removeFromParent()
         panel = nil
@@ -558,12 +558,12 @@ final class SquishScene: SKScene {
                     self.lastWholeSecond = 99
                     self.phase = .playing
                 } else {
-                    self.finalize()
+                    self.showResult()
                 }
             }
-            if !shown { finalize() }
+            if !shown { showResult() }
         case "result":
-            finalize()
+            showResult()
         case "replay":
             InterstitialAdManager.shared.showIfNeeded { [weak self] in
                 guard let self else { return }
